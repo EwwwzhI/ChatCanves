@@ -1,35 +1,31 @@
-# Privacy Policy for Gemini Power Kit
+# Privacy Policy for ChatCanves
 
-**Last Updated:** August 31, 2025
+**Last Updated:** April 7, 2026
 
-Thank you for using Gemini Power Kit ("the Extension"). Your privacy is important to us. This Privacy Policy explains what information the Extension does and does not collect from you.
+ChatCanves is designed to run locally in your browser.
 
-## 1. No Data Collection
+## Data Collection
 
-The Extension is designed with user privacy as a core principle.
-The Extension is designed to run entirely on your local computer (client-side). **We do not collect, store, transmit, or have access to any of your personal data**.
+ChatCanves does not collect, transmit, or store your Gemini conversations on any external server.
 
-This includes:
--   Your Google account information.
--   Your Gemini chat history, prompts, or responses.
--   Your IP address or any other network information.
--   Any other data from your browser or computer.
+## Local Storage
 
-## 2. How the Extension Works
+ChatCanves stores theme-related settings locally in the browser, including:
 
-The Extension operates by reading the content of the active Gemini webpage in your browser to provide its features. This process happens locally on your machine and the data is never sent to any external server or service.
+- Appearance mode
+- Custom accent color
+- Interface opacity
+- Wallpaper metadata and local assets
+- Background presentation settings
 
-## 3. Permissions
+These settings are stored on your device and are used only to render the extension's theme features.
 
-The Extension requires minimal permissions to function:
+## Site Access
 
--   **Access to `gemini.google.com`**: This permission is necessary for the Extension to read the content of the active Gemini webpage and provide its features. It is used for no other purpose.
--   **Storage**: This permission is used to save your preferences, such as the state of feature switches. All data is stored locally on your device and is never transmitted to any external server.
+ChatCanves runs on `gemini.google.com` so it can apply theme styling and render the in-page settings panel.
 
-## 4. Changes to This Policy
+## Contact
 
-We may update this Privacy Policy in the future if the Extension's functionality changes. Any updates will be posted on this page.
+Repository and issue tracker:
 
-## 5. Contact Us
-
-If you have any questions about this Privacy Policy, please open an issue on our GitHub repository.
+- [github.com/EwwwzhI/ChatCanves](https://github.com/EwwwzhI/ChatCanves)

@@ -1,73 +1,9 @@
-## [0.6.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.6.0...v0.6.1) (2026-03-01)
+# Changelog
 
+## 0.1.0 - 2026-04-07
 
-### Bug Fixes
-
-* theme button style ([a3d1f2e](https://github.com/RonkTsang/gemini-chat-extension/commit/a3d1f2efa046ad13eec8547f3a5b454a900d5e5f))
-
-# [0.6.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.3...v0.6.0) (2026-03-01)
-
-
-### Features
-
-* Add Gemini theme customization features ([#17](https://github.com/RonkTsang/gemini-chat-extension/issues/17)) ([0681c35](https://github.com/RonkTsang/gemini-chat-extension/commit/0681c351a6c63fc2cc3a89f610a918c0d8bb3666)), closes [#16](https://github.com/RonkTsang/gemini-chat-extension/issues/16)
-
-## [0.5.3](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.2...v0.5.3) (2026-02-16)
-
-
-### Bug Fixes
-
-* improve text extraction logic in updateTocList function ([#15](https://github.com/RonkTsang/gemini-chat-extension/issues/15)) ([fd97e22](https://github.com/RonkTsang/gemini-chat-extension/commit/fd97e22a006973f8db93c03bc9c42dd4c38217c1))
-
-## [0.5.2](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.1...v0.5.2) (2026-02-10)
-
-
-### Bug Fixes
-
-* synchronize color mode updates using useRef ([1a43a01](https://github.com/RonkTsang/gemini-chat-extension/commit/1a43a01bc12e3cc5fdc4cc234a713710f8f0b9df))
-* update chat title selector in tabTitleSync ([#14](https://github.com/RonkTsang/gemini-chat-extension/issues/14)) ([86b3deb](https://github.com/RonkTsang/gemini-chat-extension/commit/86b3deba3bfb58e869aaad42bf338e45668f26cc))
-
-## [0.5.1](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.5.0...v0.5.1) (2026-02-04)
-
-
-### Bug Fixes
-
-* show "What's New" toast when no version record is found ([#13](https://github.com/RonkTsang/gemini-chat-extension/issues/13)) ([a36049d](https://github.com/RonkTsang/gemini-chat-extension/commit/a36049ddc0b7346ca68e45e866b6cc34e946d87a))
-
-# [0.5.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.4.0...v0.5.0) (2026-02-04)
-
-
-### Features
-
-* add "What's New" toast notification for version updates ([#12](https://github.com/RonkTsang/gemini-chat-extension/issues/12)) ([40da6c5](https://github.com/RonkTsang/gemini-chat-extension/commit/40da6c59a21db62c5d47c6c1a26bdb19c2798b9c))
-
-# [0.4.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.3.0...v0.4.0) (2026-01-30)
-
-
-### Bug Fixes
-
-* theme error when select theme manually ([#10](https://github.com/RonkTsang/gemini-chat-extension/issues/10)) ([655a5f9](https://github.com/RonkTsang/gemini-chat-extension/commit/655a5f9503a0081183f91c496149faa0c42b6eda))
-
-
-### Features
-
-* open stuff item in new tab ([#9](https://github.com/RonkTsang/gemini-chat-extension/issues/9)) ([66a1961](https://github.com/RonkTsang/gemini-chat-extension/commit/66a196113bf583aeaeacd555777694e3f6d4a1cb))
-* update notice style ([#11](https://github.com/RonkTsang/gemini-chat-extension/issues/11)) ([1aec4af](https://github.com/RonkTsang/gemini-chat-extension/commit/1aec4af938a53c72018db8d8e1db256e52459281))
-
-# [0.3.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.2.0...v0.3.0) (2026-01-23)
-
-
-### Features
-
-* add image preview in chat-outline ([#6](https://github.com/RonkTsang/gemini-chat-extension/issues/6)) ([19ec5f5](https://github.com/RonkTsang/gemini-chat-extension/commit/19ec5f5f5626a1f361d71701515b76b12307e1d3))
-* title sync ([#7](https://github.com/RonkTsang/gemini-chat-extension/issues/7)) ([2af8935](https://github.com/RonkTsang/gemini-chat-extension/commit/2af89353437406d11feb734f8875f0828744e8ab))
-
-# [0.2.0](https://github.com/RonkTsang/gemini-chat-extension/compare/v0.1.1...v0.2.0) (2026-01-07)
-
-
-### Features
-
-* **capsule-bar:** implement horizontal scrolling with mouse wheel support ([d7a0442](https://github.com/RonkTsang/gemini-chat-extension/commit/d7a04425255a1296693029f9985a21e6905f047e))
-* enhance capsule bar configuration and layout ([3ea7a9f](https://github.com/RonkTsang/gemini-chat-extension/commit/3ea7a9f343856298686c08744a6dc62755604257))
-* **i18n:** update quick follow-up descriptions for clarity across multiple languages ([f7d1483](https://github.com/RonkTsang/gemini-chat-extension/commit/f7d14839f7d2417f1a92f9714ecd4391a055dc99))
-* reload dialog ([#5](https://github.com/RonkTsang/gemini-chat-extension/issues/5)) ([54be85a](https://github.com/RonkTsang/gemini-chat-extension/commit/54be85af9099ad859f0d6807769973d1a5696ff3)), closes [#4](https://github.com/RonkTsang/gemini-chat-extension/issues/4)
+- Renamed the extension to ChatCanves
+- Reduced the product to the Gemini theme and background edition only
+- Replaced the old in-page entry with a right-side floating launcher and slide-out panel
+- Added custom accent color picking and interface opacity controls
+- Updated project assets and repository metadata for the ChatCanves repository

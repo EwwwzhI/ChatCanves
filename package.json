@@ -1,9 +1,9 @@
 {
   "name": "chatcanves",
-  "description": "A focused Gemini theme and background extension with color presets, appearance controls, and custom wallpaper.",
+  "description": "A focused Gemini theme extension with custom accent color, interface opacity, and wallpaper controls.",
   "private": true,
   "version": "0.1.0",
-  "author": "RonkTsang",
+  "author": "EwwwzhI",
   "type": "module",
   "scripts": {
     "dev": "wxt",
