@@ -1,22 +1,23 @@
 import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import {
   Box,
-  Text,
-  Heading,
-  VStack,
-  HStack,
   Button,
+  Heading,
+  HStack,
   IconButton,
   Image,
+  NativeSelect,
   Slider,
   Switch,
-  NativeSelect,
+  Text,
+  VStack,
 } from '@chakra-ui/react'
 import {
   HiOutlineCloudUpload,
   HiOutlineInformationCircle,
   HiOutlineTrash,
 } from 'react-icons/hi'
+import type { SiteCapabilities } from '@/common/site'
 import type {
   ThemeBackgroundResolvedState,
   WelcomeGreetingReadabilityMode,
@@ -25,6 +26,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
 
 interface CustomBackgroundProps {
+  capabilities: SiteCapabilities
   state: ThemeBackgroundResolvedState | null
   isLoading: boolean
   onToggleBackground: (enabled: boolean) => Promise<void>
@@ -255,119 +257,18 @@ export function CustomBackground(props: CustomBackgroundProps) {
 
       {isBackgroundEnabled && (
         <>
-          <HStack justify="space-between" align="center" mb={5} gap={4}>
-            <Text fontSize="sm" color="gemOnSurface">
-              {tt('settingPanel.theme.blurIntensity', 'Blur')}
-            </Text>
-            <Slider.Root
-              min={0}
-              max={20}
-              step={1}
-              value={[localBlurValue]}
-              onValueChange={(details) => setLocalBlurValue(details.value[0] ?? 0)}
-              onValueChangeEnd={(details) => void props.onBlurChange(details.value[0] ?? 0)}
-              disabled={props.isLoading || isFilePending}
-              width={{ base: '170px', md: '220px' }}
-            >
-              <Slider.Control>
-                <Slider.Track>
-                  <Slider.Range />
-                </Slider.Track>
-                <Slider.Thumb index={0}>
-                  <Slider.DraggingIndicator
-                    layerStyle="fill.solid"
-                    top="6"
-                    rounded="sm"
-                    px="1.5"
-                    fontSize="xs"
-                  >
-                    <HStack gap="0.5">
-                      <Slider.ValueText />
-                      <Box as="span">px</Box>
-                    </HStack>
-                  </Slider.DraggingIndicator>
-                </Slider.Thumb>
-              </Slider.Control>
-            </Slider.Root>
-          </HStack>
-
-          <HStack justify="space-between" mb={4}>
-            <HStack gap={1}>
+          {props.capabilities.blur && (
+            <HStack justify="space-between" align="center" mb={5} gap={4}>
               <Text fontSize="sm" color="gemOnSurface">
-                {tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
-              </Text>
-              <Tooltip
-                content={tt(
-                  'settingPanel.theme.messageGlassEffectInfo',
-                  'Enabling this adds a glass effect. It may impact performance on low-end devices.',
-                )}
-              >
-                <IconButton
-                  aria-label={tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
-                  size="2xs"
-                  variant="ghost"
-                >
-                  <HiOutlineInformationCircle />
-                </IconButton>
-              </Tooltip>
-            </HStack>
-
-            <Switch.Root
-              checked={settings?.messageGlassEnabled ?? false}
-              onCheckedChange={(details) => void props.onToggleMessageGlass(details.checked)}
-              disabled={props.isLoading || isFilePending}
-            >
-              <Switch.HiddenInput />
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Root>
-          </HStack>
-
-          <HStack justify="space-between" mt={5} mb={4}>
-            <HStack gap={1}>
-              <Text fontSize="sm" color="gemOnSurface">
-                {tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
-              </Text>
-              <Tooltip
-                content={tt(
-                  'settingPanel.theme.sidebarScrimInfo',
-                  'Improves sidebar text contrast on wallpaper. This option only takes effect in Light mode.',
-                )}
-              >
-                <IconButton
-                  aria-label={tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
-                  size="2xs"
-                  variant="ghost"
-                >
-                  <HiOutlineInformationCircle />
-                </IconButton>
-              </Tooltip>
-            </HStack>
-            <Switch.Root
-              checked={sidebarScrimEnabled}
-              onCheckedChange={(details) => void props.onToggleSidebarScrim(details.checked)}
-              disabled={props.isLoading || isFilePending}
-            >
-              <Switch.HiddenInput />
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch.Root>
-          </HStack>
-
-          {sidebarScrimEnabled && (
-            <HStack justify="space-between" align="center" mb={5} gap={4} position="relative" zIndex={1}>
-              <Text fontSize="sm" color="gemOnSurface">
-                {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
+                {tt('settingPanel.theme.blurIntensity', 'Blur')}
               </Text>
               <Slider.Root
                 min={0}
-                max={100}
+                max={20}
                 step={1}
-                value={[localSidebarScrimValue]}
-                onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
-                onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
+                value={[localBlurValue]}
+                onValueChange={(details) => setLocalBlurValue(details.value[0] ?? 0)}
+                onValueChangeEnd={(details) => void props.onBlurChange(details.value[0] ?? 0)}
                 disabled={props.isLoading || isFilePending}
                 width={{ base: '170px', md: '220px' }}
               >
@@ -382,11 +283,10 @@ export function CustomBackground(props: CustomBackgroundProps) {
                       rounded="sm"
                       px="1.5"
                       fontSize="xs"
-                      zIndex={2}
                     >
                       <HStack gap="0.5">
                         <Slider.ValueText />
-                        <Box as="span">%</Box>
+                        <Box as="span">px</Box>
                       </HStack>
                     </Slider.DraggingIndicator>
                   </Slider.Thumb>
@@ -395,61 +295,173 @@ export function CustomBackground(props: CustomBackgroundProps) {
             </HStack>
           )}
 
-          <HStack justify="space-between" align="center" mb={5} gap={4}>
-            <HStack gap={1}>
-              <Text fontSize="sm" color="gemOnSurface">
-                {tt('settingPanel.theme.welcomeGreetingReadability', 'Welcome greeting readability')}
-              </Text>
-              <Tooltip
-                content={tt(
-                  'settingPanel.theme.welcomeGreetingReadabilityInfo',
-                  'Controls text color adaptation for the homepage welcome greeting when wallpaper is enabled. Use this if the greeting is hard to read in Light mode.',
-                )}
-              >
-                <IconButton
-                  aria-label={tt(
-                    'settingPanel.theme.welcomeGreetingReadability',
-                    'Welcome greeting readability',
+          {props.capabilities.messageGlass && (
+            <HStack justify="space-between" mb={4}>
+              <HStack gap={1}>
+                <Text fontSize="sm" color="gemOnSurface">
+                  {tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
+                </Text>
+                <Tooltip
+                  content={tt(
+                    'settingPanel.theme.messageGlassEffectInfo',
+                    'Enabling this adds a glass effect. It may impact performance on low-end devices.',
                   )}
-                  size="2xs"
-                  variant="ghost"
                 >
-                  <HiOutlineInformationCircle />
-                </IconButton>
-              </Tooltip>
-            </HStack>
-            <NativeSelect.Root
-              size="sm"
-              width={{ base: '170px', md: '220px' }}
-              disabled={props.isLoading || isFilePending}
-            >
-              <NativeSelect.Field
-                value={welcomeGreetingReadabilityMode}
-                onChange={(event) => {
-                  void props.onWelcomeGreetingReadabilityModeChange(
-                    event.target.value as WelcomeGreetingReadabilityMode,
-                  )
-                }}
+                  <IconButton
+                    aria-label={tt('settingPanel.theme.messageGlassEffect', 'Message Glass Effect')}
+                    size="2xs"
+                    variant="ghost"
+                  >
+                    <HiOutlineInformationCircle />
+                  </IconButton>
+                </Tooltip>
+              </HStack>
+
+              <Switch.Root
+                checked={settings?.messageGlassEnabled ?? false}
+                onCheckedChange={(details) => void props.onToggleMessageGlass(details.checked)}
+                disabled={props.isLoading || isFilePending}
               >
-                <option value="default">
-                  {tt('settingPanel.theme.welcomeGreetingReadabilityDefault', 'Keep default')}
-                </option>
-                <option value="auto">
-                  {tt(
-                    'settingPanel.theme.welcomeGreetingReadabilityAuto',
-                    'Auto adapt (first estimate)',
+                <Switch.HiddenInput />
+                <Switch.Control>
+                  <Switch.Thumb />
+                </Switch.Control>
+              </Switch.Root>
+            </HStack>
+          )}
+
+          {props.capabilities.sidebarScrim && (
+            <>
+              <HStack justify="space-between" mt={5} mb={4}>
+                <HStack gap={1}>
+                  <Text fontSize="sm" color="gemOnSurface">
+                    {tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
+                  </Text>
+                  <Tooltip
+                    content={tt(
+                      'settingPanel.theme.sidebarScrimInfo',
+                      'Improves sidebar text contrast on wallpaper. This option only takes effect in Light mode.',
+                    )}
+                  >
+                    <IconButton
+                      aria-label={tt('settingPanel.theme.sidebarScrim', 'Sidebar readability scrim')}
+                      size="2xs"
+                      variant="ghost"
+                    >
+                      <HiOutlineInformationCircle />
+                    </IconButton>
+                  </Tooltip>
+                </HStack>
+                <Switch.Root
+                  checked={sidebarScrimEnabled}
+                  onCheckedChange={(details) => void props.onToggleSidebarScrim(details.checked)}
+                  disabled={props.isLoading || isFilePending}
+                >
+                  <Switch.HiddenInput />
+                  <Switch.Control>
+                    <Switch.Thumb />
+                  </Switch.Control>
+                </Switch.Root>
+              </HStack>
+
+              {sidebarScrimEnabled && (
+                <HStack justify="space-between" align="center" mb={5} gap={4} position="relative" zIndex={1}>
+                  <Text fontSize="sm" color="gemOnSurface">
+                    {tt('settingPanel.theme.sidebarScrimIntensity', 'Scrim intensity')}
+                  </Text>
+                  <Slider.Root
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={[localSidebarScrimValue]}
+                    onValueChange={(details) => setLocalSidebarScrimValue(details.value[0] ?? 0)}
+                    onValueChangeEnd={(details) => void props.onSidebarScrimIntensityChange(details.value[0] ?? 0)}
+                    disabled={props.isLoading || isFilePending}
+                    width={{ base: '170px', md: '220px' }}
+                  >
+                    <Slider.Control>
+                      <Slider.Track>
+                        <Slider.Range />
+                      </Slider.Track>
+                      <Slider.Thumb index={0}>
+                        <Slider.DraggingIndicator
+                          layerStyle="fill.solid"
+                          top="6"
+                          rounded="sm"
+                          px="1.5"
+                          fontSize="xs"
+                          zIndex={2}
+                        >
+                          <HStack gap="0.5">
+                            <Slider.ValueText />
+                            <Box as="span">%</Box>
+                          </HStack>
+                        </Slider.DraggingIndicator>
+                      </Slider.Thumb>
+                    </Slider.Control>
+                  </Slider.Root>
+                </HStack>
+              )}
+            </>
+          )}
+
+          {props.capabilities.welcomeGreetingReadability && (
+            <HStack justify="space-between" align="center" mb={5} gap={4}>
+              <HStack gap={1}>
+                <Text fontSize="sm" color="gemOnSurface">
+                  {tt('settingPanel.theme.welcomeGreetingReadability', 'Welcome greeting readability')}
+                </Text>
+                <Tooltip
+                  content={tt(
+                    'settingPanel.theme.welcomeGreetingReadabilityInfo',
+                    'Controls text color adaptation for the homepage welcome greeting when wallpaper is enabled. Use this if the greeting is hard to read in Light mode.',
                   )}
-                </option>
-                <option value="force-light">
-                  {tt(
-                    'settingPanel.theme.welcomeGreetingReadabilityForceLight',
-                    'Force light text',
-                  )}
-                </option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </HStack>
+                >
+                  <IconButton
+                    aria-label={tt(
+                      'settingPanel.theme.welcomeGreetingReadability',
+                      'Welcome greeting readability',
+                    )}
+                    size="2xs"
+                    variant="ghost"
+                  >
+                    <HiOutlineInformationCircle />
+                  </IconButton>
+                </Tooltip>
+              </HStack>
+              <NativeSelect.Root
+                size="sm"
+                width={{ base: '170px', md: '220px' }}
+                disabled={props.isLoading || isFilePending}
+              >
+                <NativeSelect.Field
+                  value={welcomeGreetingReadabilityMode}
+                  onChange={(event) => {
+                    void props.onWelcomeGreetingReadabilityModeChange(
+                      event.target.value as WelcomeGreetingReadabilityMode,
+                    )
+                  }}
+                >
+                  <option value="default">
+                    {tt('settingPanel.theme.welcomeGreetingReadabilityDefault', 'Keep default')}
+                  </option>
+                  <option value="auto">
+                    {tt(
+                      'settingPanel.theme.welcomeGreetingReadabilityAuto',
+                      'Auto adapt (first estimate)',
+                    )}
+                  </option>
+                  <option value="force-light">
+                    {tt(
+                      'settingPanel.theme.welcomeGreetingReadabilityForceLight',
+                      'Force light text',
+                    )}
+                  </option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </HStack>
+          )}
         </>
       )}
     </Box>

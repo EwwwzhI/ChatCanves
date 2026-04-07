@@ -47,6 +47,7 @@ function createState(
 function createAsset(overrides: Partial<ThemeAssetRow> = {}): ThemeAssetRow {
   return {
     id: 'asset-1',
+    site: 'gemini',
     feature: 'background-image',
     mimeType: 'image/png',
     size: 128,

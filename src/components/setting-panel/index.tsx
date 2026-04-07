@@ -3,8 +3,9 @@ import { Box, CloseButton, Heading, HStack, Text, VStack } from "@chakra-ui/reac
 import { HiOutlineColorSwatch } from "react-icons/hi"
 import { ThemeSettingsView } from "./views/theme"
 import { useEventEmitter } from "../../hooks/useEventBus"
-import { tt } from "@/utils/i18n"
+import { t, tt } from "@/utils/i18n"
 import { isExtensionContextValid } from "@/utils/contextMonitor"
+import { getCurrentSiteContext } from "@/entrypoints/content/gemini-theme"
 
 const LAUNCHER_LABEL_FALLBACK = 'Theme'
 
@@ -12,6 +13,11 @@ export const SettingPanel = () => {
   const [open, setOpen] = useState(false)
   const { emit } = useEventEmitter()
   const titleId = useId()
+  const siteContext = getCurrentSiteContext()
+  const siteDescription = t(
+    'settingPanel.config.theme.views.index.siteDescription',
+    siteContext.displayName,
+  )
 
   useEffect(() => {
     emit('settings:state-changed', { open })
@@ -150,10 +156,9 @@ export const SettingPanel = () => {
                   {tt('settingPanel.config.theme.views.index.title', 'Theme Settings')}
                 </Heading>
                 <Text color="gemOnSurfaceVariant" fontSize="sm" maxW="420px">
-                  {tt(
-                    'settingPanel.config.theme.views.index.description',
-                    'Customize Gemini\'s color theme and background to match your style.',
-                  )}
+                  {siteDescription === 'settingPanel.config.theme.views.index.siteDescription'
+                    ? `Customize colors and wallpaper for ${siteContext.displayName}.`
+                    : siteDescription}
                 </Text>
               </VStack>
 

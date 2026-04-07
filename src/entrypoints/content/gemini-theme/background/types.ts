@@ -2,6 +2,7 @@ import type {
   WelcomeGreetingReadabilityMode,
   WelcomeGreetingResolved,
 } from './welcome-greeting/types'
+import type { SiteKey } from '@/common/site'
 
 export const THEME_BACKGROUND_VERSION = 3 as const
 
@@ -58,6 +59,7 @@ export interface ThemeBackgroundResolvedState {
 
 export interface ThemeAssetRow {
   id: string
+  site: SiteKey
   feature: 'background-image'
   mimeType: ThemeBackgroundMimeType
   size: number

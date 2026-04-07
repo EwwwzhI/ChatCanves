@@ -54,14 +54,14 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] user-query user-query-content span.user-query-bubble-with-background {
-  background-color: color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 40%) !important;
+  background-color: color-mix(in srgb, var(--ccv-gemini-chat-surface-light, var(--gem-sys-color--surface-container-high)), transparent 18%) !important;
   backdrop-filter: blur(20px);
   box-shadow: inset 0 0 1px 0 #ffffff;
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme user-query user-query-content span.user-query-bubble-with-background,
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) user-query user-query-content span.user-query-bubble-with-background {
-  background-color: color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 40%) !important;
+  background-color: color-mix(in srgb, var(--ccv-gemini-chat-surface-dark, var(--gem-sys-color--surface-container-high)), transparent 18%) !important;
   backdrop-filter: blur(10px);
   box-shadow: inset 0 0 1px 0 #ffffff;
   border: none;
@@ -115,9 +115,10 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] model-response response-container>div.response-container {
-  background: var(--gem-sys-color--surface-container-high);
+  background: var(--ccv-gemini-chat-surface-light-strong, var(--gem-sys-color--surface-container-high));
   backdrop-filter: blur(20px);
   box-shadow: inset 0 0 1px 0 #ffffff;
+  border: 1px solid var(--ccv-gemini-chat-border-light, transparent);
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] dual-model-response {
@@ -140,10 +141,10 @@
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme model-response response-container>div.response-container,
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) model-response response-container>div.response-container {
-  background: var(--gem-sys-color--surface-container-high);
+  background: var(--ccv-gemini-chat-surface-dark-strong, var(--gem-sys-color--surface-container-high));
   backdrop-filter: blur(20px);
   box-shadow: inset 0 0 1px 0 #ffffff;
-  border: none;
+  border: 1px solid var(--ccv-gemini-chat-border-dark, transparent);
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme dual-model-response,
@@ -171,7 +172,7 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] model-response response-container>div.response-container {
-  background: var(--gem-sys-color--surface-container);
+  background: var(--ccv-gemini-chat-surface-light-strong, var(--gem-sys-color--surface-container));
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] dual-model-response {
@@ -188,7 +189,7 @@
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] body.dark-theme model-response response-container>div.response-container,
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] :where(.theme-host):where(.dark-theme) model-response response-container>div.response-container {
-  background-color: var(--gem-sys-color--surface-container);
+  background-color: var(--ccv-gemini-chat-surface-dark-strong, var(--gem-sys-color--surface-container));
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="false"] body.dark-theme dual-model-response,
@@ -207,8 +208,9 @@
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-container input-area-v2 {
-  background-color: color-mix(in srgb, var(--gem-sys-color--surface-bright), transparent 40%);
+  background-color: var(--ccv-gemini-chat-surface-light-strong, var(--gem-sys-color--surface-container-high));
   backdrop-filter: blur(10px);
+  border: 1px solid var(--ccv-gemini-chat-border-light, transparent);
 }
 
 :root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] intent-card>button {
@@ -225,7 +227,31 @@
 
 :root[data-gpk-bg-enabled="true"] input-area-v2>div>auto-suggest>div {
   border-radius: 24px;
-  background: var(--gem-sys-color--surface-bright);
+  background: var(--ccv-gemini-chat-surface-light-strong, var(--gem-sys-color--surface-container-high));
+  border: 1px solid var(--ccv-gemini-chat-border-light, transparent);
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] input-area-v2>div>auto-suggest>div {
+  background: var(--ccv-gemini-chat-surface-light-strong, var(--gem-sys-color--surface-container-high));
+  backdrop-filter: blur(10px);
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme input-container input-area-v2,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) input-container input-area-v2 {
+  background-color: var(--ccv-gemini-chat-surface-dark-strong, var(--gem-sys-color--surface-container-high));
+  border: 1px solid var(--ccv-gemini-chat-border-dark, transparent);
+}
+
+:root[data-gpk-bg-enabled="true"] body.dark-theme input-area-v2>div>auto-suggest>div,
+:root[data-gpk-bg-enabled="true"] :where(.theme-host):where(.dark-theme) input-area-v2>div>auto-suggest>div {
+  background: var(--ccv-gemini-chat-surface-dark-strong, var(--gem-sys-color--surface-container-high));
+  border: 1px solid var(--ccv-gemini-chat-border-dark, transparent);
+}
+
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] body.dark-theme input-area-v2>div>auto-suggest>div,
+:root[data-gpk-bg-enabled="true"][data-gpk-msg-glass="true"] :where(.theme-host):where(.dark-theme) input-area-v2>div>auto-suggest>div {
+  background: var(--ccv-gemini-chat-surface-dark-strong, var(--gem-sys-color--surface-container-high));
+  backdrop-filter: blur(10px);
 }
 
 :root[data-gpk-bg-enabled="true"] div.blur-bg.visible-primary-message.blur-shown {

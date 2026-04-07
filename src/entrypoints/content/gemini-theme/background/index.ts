@@ -9,7 +9,7 @@ export {
   validateThemeBackgroundFile,
 } from './service'
 
-export { themeBackgroundSettingsStorage } from './storage'
+export { getThemeBackgroundSettingsStorage } from './storage'
 
 export type {
   BackgroundImageRef,

@@ -14,7 +14,7 @@ ChatCanves stores theme-related settings locally in the browser, including:
 
 - Appearance mode
 - Custom accent color
-- Interface opacity
+- Theme color preferences
 - Wallpaper metadata and local assets
 - Background presentation settings
 

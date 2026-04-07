@@ -1,118 +1,88 @@
-/**
- * Gemini page theme service.
- * Manages applying, switching, and clearing theme CSS overrides,
- * as well as persisting the active theme key.
- */
+import type { AppearanceMode, GeminiTheme } from './appearance/types'
+import type { ThemeBackgroundPatch, ThemeBackgroundSettings } from './background/types'
+import type { CustomThemeSettings } from './customTheme'
+import { getActiveSiteContext, getActiveSiteKey } from '@/entrypoints/content/site-adapters/context'
+import { getThemeSiteAdapterByKey } from '@/entrypoints/content/site-adapters/registry'
 
-import { injectGeminiThemeOverride, removeGeminiThemeOverride } from './inject'
-import {
-  buildCustomThemeCss,
-  CUSTOM_THEME_KEY,
-  normalizeCustomThemeSettings,
-  type CustomThemeSettings,
-} from './customTheme'
-import { themePresets, getPresetByKey } from './preset/presets'
-import {
-  getCustomThemeSettings,
-  getThemeKey,
-  setCustomThemeSettings,
-  setThemeKey,
-  themeCustomSettingsStorage,
-  themeKeyStorage,
-} from './themeStorage'
-export * from './background'
-export * from './appearance'
-export * from './customTheme'
-
-export { themePresets, getPresetByKey } from './preset/presets'
-export { getCustomThemeSettings, getThemeKey } from './themeStorage'
-export type { ThemePreset } from './preset/presets'
-
-let watchersInitialized = false
-
-async function resolveThemeCss(key: string): Promise<string | null> {
-  if (key === CUSTOM_THEME_KEY) {
-    const settings = await getCustomThemeSettings()
-    return buildCustomThemeCss(settings)
-  }
-
-  const preset = getPresetByKey(key)
-  return preset?.css ?? null
+function getActiveThemeSiteAdapter() {
+  return getThemeSiteAdapterByKey(getActiveSiteKey())
 }
 
-async function syncThemeCss(key: string): Promise<void> {
-  const css = await resolveThemeCss(key)
-  if (css) {
-    injectGeminiThemeOverride(css)
-  } else {
-    removeGeminiThemeOverride()
-  }
-}
-
-/**
- * Apply a theme by key. Injects CSS override and persists the choice.
- * If the key is 'blue' or empty, clears any override (Gemini default).
- */
-export async function applyTheme(key: string): Promise<void> {
-  if (!key) {
-    removeGeminiThemeOverride()
-    await setThemeKey('')
-    return
-  }
-
-  const css = await resolveThemeCss(key)
-  if (!css) {
-    removeGeminiThemeOverride()
-    await setThemeKey('')
-    return
-  }
-
-  injectGeminiThemeOverride(css)
-  await setThemeKey(key)
+export async function initTheme(): Promise<void> {
+  await getActiveThemeSiteAdapter().initTheme()
 }
 
 export async function applyCustomTheme(
   settings: Partial<CustomThemeSettings>,
-): Promise<CustomThemeSettings> {
-  const normalized = await setCustomThemeSettings(
-    normalizeCustomThemeSettings(settings),
-  )
-  injectGeminiThemeOverride(buildCustomThemeCss(normalized))
-  await setThemeKey(CUSTOM_THEME_KEY)
-  return normalized
+) {
+  return await getActiveThemeSiteAdapter().applyCustomTheme(settings)
 }
 
-/**
- * Initialize theme on page load. Reads persisted key and applies.
- * Also starts a cross-tab watcher so other tabs react to theme changes.
- */
-export async function initTheme(): Promise<void> {
-  try {
-    await syncThemeCss(await getThemeKey())
-  } catch (error) {
-    console.warn('[Theme] Failed to initialize theme:', error)
-  }
-
-  if (watchersInitialized) return
-  watchersInitialized = true
-
-  themeKeyStorage.watch((newKey) => {
-    void syncThemeCss(newKey ?? '')
-  })
-  themeCustomSettingsStorage.watch((newSettings) => {
-    if (!newSettings) return
-    void getThemeKey().then((key) => {
-      if (key === CUSTOM_THEME_KEY) {
-        injectGeminiThemeOverride(buildCustomThemeCss(newSettings))
-      }
-    })
-  })
-}
-
-/**
- * Clear the active theme, restoring Gemini's default styling.
- */
 export async function clearTheme(): Promise<void> {
-  removeGeminiThemeOverride()
-  await setThemeKey('')
+  await getActiveThemeSiteAdapter().clearTheme()
 }
+
+export function getAppearanceState() {
+  return getActiveThemeSiteAdapter().getAppearanceState()
+}
+
+export function setAppearanceMode(mode: AppearanceMode) {
+  return getActiveThemeSiteAdapter().setAppearanceMode(mode)
+}
+
+export function subscribeSystemThemeChange(
+  onChange: (theme: GeminiTheme) => void,
+) {
+  return getActiveThemeSiteAdapter().subscribeSystemThemeChange(onChange)
+}
+
+export async function getThemeBackgroundSettings() {
+  return await getActiveThemeSiteAdapter().getThemeBackgroundSettings()
+}
+
+export async function initThemeBackground(): Promise<void> {
+  await getActiveThemeSiteAdapter().initThemeBackground()
+}
+
+export async function updateThemeBackgroundSettings(
+  patch: ThemeBackgroundPatch,
+) {
+  return await getActiveThemeSiteAdapter().updateThemeBackgroundSettings(patch)
+}
+
+export async function uploadThemeBackground(file: File) {
+  return await getActiveThemeSiteAdapter().uploadThemeBackground(file)
+}
+
+export async function removeThemeBackground() {
+  return await getActiveThemeSiteAdapter().removeThemeBackground()
+}
+
+export async function resolveThemeBackgroundPreviewUrl(
+  settings: ThemeBackgroundSettings,
+) {
+  return await getActiveThemeSiteAdapter().resolveThemeBackgroundPreviewUrl(settings)
+}
+
+export function getCurrentSiteContext() {
+  return getActiveSiteContext()
+}
+
+export * from './background/types'
+export * from './background/welcome-greeting'
+export * from './appearance/types'
+export * from './customTheme'
+export { ThemeBackgroundError } from './background/createService'
+export {
+  DEFAULT_THEME_BACKGROUND_SETTINGS,
+  normalizeThemeBackgroundSettings,
+} from './background/types'
+export { getThemeBackgroundSettingsStorage } from './background/storage'
+export {
+  getThemeCustomSettingsStorage,
+  getThemeKey,
+  getThemeKeyStorage,
+  getCustomThemeSettings,
+} from './themeStorage'
+export { themePresets, getPresetByKey } from './runtime'
+export type { ThemePreset } from './preset/presets'

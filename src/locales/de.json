@@ -35,8 +35,12 @@
       "customColorHex": "Hex color",
       "customColorApply": "Use custom theme",
       "customColorActive": "Custom theme active",
-      "surfaceOpacity": "Interface opacity",
-      "surfaceOpacityInfo": "Controls transparency for themed panels and containers."
+      "surfaceOpacity": "Chat surface opacity",
+      "surfaceOpacityInfo": "Controls transparency for chat cards, title bars, and composer.",
+      "surfaceColorPick": "Chat surface",
+      "surfaceColorHex": "Surface hex",
+      "textColorPick": "Chat text",
+      "textColorHex": "Text hex"
     },
     "config": {
       "theme": {
@@ -44,7 +48,8 @@
         "views": {
           "index": {
             "title": "Thema",
-            "description": "Hauptübersicht für Theme-Einstellungen."
+            "description": "Hauptübersicht für Theme-Einstellungen.",
+            "siteDescription": "Farben und Hintergrundbild für $1 anpassen."
           },
           "detail": {
             "title": "Thema-Details",

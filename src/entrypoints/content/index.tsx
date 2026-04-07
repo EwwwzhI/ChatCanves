@@ -1,15 +1,24 @@
 import { renderOverlay } from "./overlay"
 import { i18nCache } from '@/utils/i18nCache'
+import { setActiveSiteContext } from './site-adapters/context'
+import { resolveThemeSiteAdapter } from './site-adapters/registry'
 import { initTheme, initThemeBackground } from './gemini-theme'
 
 export default defineContentScript({
-  matches: ['*://gemini.google.com/*'],
+  matches: ['*://gemini.google.com/*', '*://chat.deepseek.com/*'],
   runAt: 'document_idle',
   async main(ctx) {
+    const adapter = resolveThemeSiteAdapter(window.location.hostname)
+    if (!adapter) return
+
     i18nCache.initialize()
-    await injectScript('/theme-sync-main-world.js', {
-      keepInDom: true,
-    })
+    setActiveSiteContext(adapter.getContext(window.location.hostname))
+
+    if (adapter.mainWorldScript) {
+      await injectScript(adapter.mainWorldScript as Parameters<typeof injectScript>[0], {
+        keepInDom: true,
+      })
+    }
     await initTheme()
     await initThemeBackground()
 

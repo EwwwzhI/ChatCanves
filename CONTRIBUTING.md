@@ -7,7 +7,7 @@ This repository only accepts changes related to the current theme edition of Cha
 In scope:
 
 - Gemini appearance mode handling
-- Custom accent color and opacity
+- Custom interface accent and chat color controls
 - Wallpaper rendering and persistence
 - Theme panel UI and interaction
 - i18n, tests, and build reliability for the theme edition

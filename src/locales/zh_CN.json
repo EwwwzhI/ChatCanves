@@ -31,13 +31,17 @@
       "launcherLabel": "主题",
       "customColorTitle": "自定义强调色",
       "customColorDescription": "调整颜色或透明度后，将自动切换为自定义主题。",
-      "customColorPick": "强调色",
-      "customColorHex": "十六进制颜色",
+      "customColorPick": "界面强调色",
+      "customColorHex": "界面强调色十六进制颜色",
       "customColorApply": "使用自定义主题",
       "customColorActive": "已启用自定义主题",
       "hue": "色相",
-      "surfaceOpacity": "界面透明度",
-      "surfaceOpacityInfo": "控制主题面板和容器的透明程度。"
+      "surfaceOpacity": "\u804a\u5929\u6846\u900f\u660e\u5ea6",
+      "surfaceOpacityInfo": "\u63a7\u5236\u804a\u5929\u5361\u7247\u3001\u6807\u9898\u680f\u548c\u8f93\u5165\u6846\u7684\u900f\u660e\u7a0b\u5ea6\u3002",
+      "surfaceColorPick": "\u804a\u5929\u6846\u989c\u8272",
+      "surfaceColorHex": "\u804a\u5929\u6846\u5341\u516d\u8fdb\u5236\u989c\u8272",
+      "textColorPick": "\u804a\u5929\u6587\u5b57\u989c\u8272",
+      "textColorHex": "\u804a\u5929\u6587\u5b57\u5341\u516d\u8fdb\u5236\u989c\u8272"
     },
     "config": {
       "theme": {
@@ -45,7 +49,8 @@
         "views": {
           "index": {
             "title": "主题设置",
-            "description": "自定义 Gemini 的颜色主题和背景风格。"
+            "description": "自定义 Gemini 的颜色主题和背景风格。",
+            "siteDescription": "为 $1 自定义颜色和壁纸。"
           }
         }
       }

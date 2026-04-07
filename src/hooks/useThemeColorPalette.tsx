@@ -6,17 +6,15 @@ import { system } from "@/components/ui/system"
 import {
   CUSTOM_THEME_KEY,
   DEFAULT_CUSTOM_THEME_SETTINGS,
+  getCustomThemeSettings,
+  getThemeCustomSettingsStorage,
+  getThemeKeyStorage,
   getReadableTextColor,
   getThemeKey,
   hexToRgbaString,
   themePresets,
   type CustomThemeSettings,
 } from "@/entrypoints/content/gemini-theme"
-import {
-  getCustomThemeSettings,
-  themeCustomSettingsStorage,
-  themeKeyStorage,
-} from "@/entrypoints/content/gemini-theme/themeStorage"
 
 const ColorPaletteContext = createContext<{
   palette: string
@@ -47,6 +45,9 @@ export function ColorPaletteProvider({ children }: { children: React.ReactNode }
   )
 
   useEffect(() => {
+    const themeKeyStorage = getThemeKeyStorage()
+    const themeCustomSettingsStorage = getThemeCustomSettingsStorage()
+
     void getThemeKey().then((key) => {
       setSelectedThemeKey(key || 'blue')
     })
@@ -73,7 +74,7 @@ export function ColorPaletteProvider({ children }: { children: React.ReactNode }
     : selectedThemeKey
 
   const accentColor = selectedThemeKey === CUSTOM_THEME_KEY
-    ? customTheme.color
+    ? customTheme.accentColor
     : themePresets.find((preset) => preset.key === selectedThemeKey)?.primary ?? '#4285f4'
   const accentContrastColor = getReadableTextColor(accentColor)
 
@@ -98,7 +99,10 @@ export function ColorPaletteProvider({ children }: { children: React.ReactNode }
             "--gpk-panel-accent-soft": hexToRgbaString(accentColor, 0.14),
             "--gpk-panel-accent-border": hexToRgbaString(accentColor, 0.32),
             "--gpk-panel-accent-strong": hexToRgbaString(accentColor, 0.52),
-            "--gpk-panel-surface-alpha": `${customTheme.surfaceOpacity}%`,
+            "--gpk-panel-surface-color": customTheme.surfaceColor,
+            "--gpk-panel-surface-soft": hexToRgbaString(customTheme.surfaceColor, 0.18),
+            "--gpk-panel-surface-border": hexToRgbaString(customTheme.surfaceColor, 0.28),
+            "--gpk-panel-text-color": customTheme.textColor,
           },
         }}
       />

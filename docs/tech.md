@@ -8,7 +8,7 @@ Primary capabilities:
 
 - Appearance mode sync
 - Custom accent color
-- Interface opacity
+- Custom interface accent, chat surface, and text colors
 - Wallpaper upload and persistence
 - Background readability controls
 - In-page slide-out settings panel

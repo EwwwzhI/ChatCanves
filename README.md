@@ -9,7 +9,7 @@ ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com
 - Adds a floating launcher on the right side of the Gemini page
 - Opens a slide-out theme panel without relying on a browser action popup
 - Supports system, light, and dark appearance modes
-- Supports custom accent color, visual color picking, and interface opacity
+- Supports custom interface accent, chat surface color, and chat text color controls
 - Supports custom wallpaper, blur, sidebar readability scrim, and message glass effect
 - Persists theme settings locally in the browser
 

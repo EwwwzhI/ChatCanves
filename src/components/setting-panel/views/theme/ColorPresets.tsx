@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ChangeEvent,
@@ -8,27 +9,25 @@ import {
 } from 'react'
 import {
   Box,
+  Button,
   HStack,
-  IconButton,
   Slider,
   Text,
   VStack,
 } from '@chakra-ui/react'
 import {
-  HiOutlineInformationCircle,
-} from 'react-icons/hi'
-import {
   hexToRgb,
   isValidHexColor,
   normalizeHexColor,
+  type CustomThemeSettings,
 } from '@/entrypoints/content/gemini-theme'
-import { Tooltip } from '@/components/ui/tooltip'
 import { tt } from '@/utils/i18n'
 
 interface ColorPresetsProps {
-  customColor: string
-  surfaceOpacity: number
-  onApplyCustomTheme: (settings: { color?: string; surfaceOpacity?: number }) => Promise<void>
+  accentColor: string
+  surfaceColor: string
+  textColor: string
+  onApplyCustomTheme: (settings: Partial<CustomThemeSettings>) => Promise<void>
   isLoading?: boolean
 }
 
@@ -37,6 +36,8 @@ interface HsvColor {
   s: number
   v: number
 }
+
+type ColorField = 'accentColor' | 'surfaceColor' | 'textColor'
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
@@ -118,40 +119,83 @@ function hsvToHex(value: HsvColor): string {
   return rgbToHex(r, g, b)
 }
 
+const FIELD_META: Record<
+  ColorField,
+  { labelKey: string; fallback: string; hexKey: string; hexFallback: string }
+> = {
+  accentColor: {
+    labelKey: 'settingPanel.theme.customColorPick',
+    fallback: 'Interface accent',
+    hexKey: 'settingPanel.theme.customColorHex',
+    hexFallback: 'Interface accent hex',
+  },
+  surfaceColor: {
+    labelKey: 'settingPanel.theme.surfaceColorPick',
+    fallback: 'Chat surface',
+    hexKey: 'settingPanel.theme.surfaceColorHex',
+    hexFallback: 'Surface hex',
+  },
+  textColor: {
+    labelKey: 'settingPanel.theme.textColorPick',
+    fallback: 'Chat text',
+    hexKey: 'settingPanel.theme.textColorHex',
+    hexFallback: 'Text hex',
+  },
+}
+
 export function ColorPresets({
-  customColor,
-  surfaceOpacity,
+  accentColor,
+  surfaceColor,
+  textColor,
   onApplyCustomTheme,
   isLoading,
 }: ColorPresetsProps) {
   const panelRef = useRef<HTMLDivElement | null>(null)
   const nativeColorInputRef = useRef<HTMLInputElement | null>(null)
-  const [hexValue, setHexValue] = useState(customColor)
-  const [localOpacity, setLocalOpacity] = useState(surfaceOpacity)
-  const [pickerColor, setPickerColor] = useState<HsvColor>(() => hexToHsv(customColor))
+  const [activeField, setActiveField] = useState<ColorField>('accentColor')
+  const [draftColors, setDraftColors] = useState<Record<ColorField, string>>({
+    accentColor,
+    surfaceColor,
+    textColor,
+  })
+  const [pickerColor, setPickerColor] = useState<HsvColor>(() => hexToHsv(accentColor))
   const [isDraggingPanel, setIsDraggingPanel] = useState(false)
-  const previewHex = isValidHexColor(hexValue) ? normalizeHexColor(hexValue) : customColor
+
+  const currentColor = draftColors[activeField]
+  const previewHex = isValidHexColor(currentColor)
+    ? normalizeHexColor(currentColor)
+    : currentColor
   const hueColor = hsvToHex({ h: pickerColor.h, s: 1, v: 1 })
 
   useEffect(() => {
-    setHexValue(customColor)
-    setPickerColor(hexToHsv(customColor))
-  }, [customColor])
+    setDraftColors({
+      accentColor,
+      surfaceColor,
+      textColor,
+    })
+  }, [accentColor, surfaceColor, textColor])
 
   useEffect(() => {
-    setLocalOpacity(surfaceOpacity)
-  }, [surfaceOpacity])
+    setPickerColor(hexToHsv(draftColors[activeField]))
+  }, [activeField, draftColors])
 
-  const updateLocalColor = (nextColor: HsvColor) => {
-    setPickerColor(nextColor)
-    setHexValue(hsvToHex(nextColor))
+  const fieldOptions = useMemo(
+    () => (Object.entries(FIELD_META) as Array<[ColorField, typeof FIELD_META[ColorField]]>),
+    [],
+  )
+
+  const updateDraftColor = (field: ColorField, value: string) => {
+    setDraftColors((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
-  const commitColor = async (value: string) => {
+  const commitColor = async (field: ColorField, value: string) => {
     const normalized = normalizeHexColor(value)
-    setHexValue(normalized)
+    updateDraftColor(field, normalized)
     setPickerColor(hexToHsv(normalized))
-    await onApplyCustomTheme({ color: normalized })
+    await onApplyCustomTheme({ [field]: normalized })
   }
 
   const readPanelColor = (clientX: number, clientY: number): HsvColor | null => {
@@ -176,14 +220,19 @@ export function ColorPresets({
 
     setIsDraggingPanel(true)
     event.currentTarget.setPointerCapture(event.pointerId)
-    updateLocalColor(nextColor)
+    const nextHex = hsvToHex(nextColor)
+    setPickerColor(nextColor)
+    updateDraftColor(activeField, nextHex)
   }
 
   const handlePanelPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isDraggingPanel || isLoading) return
     const nextColor = readPanelColor(event.clientX, event.clientY)
     if (!nextColor) return
-    updateLocalColor(nextColor)
+
+    const nextHex = hsvToHex(nextColor)
+    setPickerColor(nextColor)
+    updateDraftColor(activeField, nextHex)
   }
 
   const handlePanelPointerUp = async (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -194,17 +243,22 @@ export function ColorPresets({
 
     if (!nextColor) return
     const nextHex = hsvToHex(nextColor)
-    updateLocalColor(nextColor)
-    await onApplyCustomTheme({ color: nextHex })
+    setPickerColor(nextColor)
+    updateDraftColor(activeField, nextHex)
+    await onApplyCustomTheme({ [activeField]: nextHex })
   }
 
   const handleApplyHex = async () => {
-    if (!isValidHexColor(hexValue)) {
-      setHexValue(customColor)
+    if (!isValidHexColor(currentColor)) {
+      updateDraftColor(activeField, activeField === 'accentColor'
+        ? accentColor
+        : activeField === 'surfaceColor'
+          ? surfaceColor
+          : textColor)
       return
     }
 
-    await commitColor(hexValue)
+    await commitColor(activeField, currentColor)
   }
 
   return (
@@ -219,204 +273,185 @@ export function ColorPresets({
         boxShadow="0 14px 40px rgba(15, 23, 42, 0.08)"
       >
         <VStack align="stretch" gap={4}>
-          <Box
-            pt={1}
-          >
-            <VStack align="stretch" gap={4}>
-              <HStack
-                align={{ base: 'stretch', md: 'flex-start' }}
-                gap={4}
-                flexDirection={{ base: 'column', md: 'row' }}
-              >
-                <Box
-                  ref={panelRef}
-                  position="relative"
-                  width={{ base: '100%', md: '220px' }}
-                  height="164px"
-                  borderRadius="xl"
-                  overflow="hidden"
-                  cursor={isLoading ? 'not-allowed' : 'crosshair'}
-                  border="1px solid"
-                  borderColor="var(--gpk-panel-accent-border)"
-                  bg={`linear-gradient(to top, #000000, transparent), linear-gradient(to right, #ffffff, ${hueColor})`}
-                  onPointerDown={handlePanelPointerDown}
-                  onPointerMove={handlePanelPointerMove}
-                  onPointerUp={(event) => void handlePanelPointerUp(event)}
-                  onPointerCancel={() => setIsDraggingPanel(false)}
-                  style={{ touchAction: 'none' }}
+          <HStack gap={2} flexWrap="wrap">
+            {fieldOptions.map(([field, meta]) => {
+              const isActive = activeField === field
+              const swatch = draftColors[field]
+              return (
+                <Button
+                  key={field}
+                  size="sm"
+                  variant={isActive ? 'solid' : 'outline'}
+                  onClick={() => setActiveField(field)}
+                  disabled={isLoading}
+                  borderRadius="full"
+                  px={3}
+                  bg={isActive ? 'var(--gpk-panel-accent)' : 'rgba(255,255,255,0.56)'}
+                  color={isActive ? 'var(--gpk-panel-accent-contrast)' : 'gemOnSurface'}
                 >
-                  <Box
-                    position="absolute"
-                    left={`${pickerColor.s * 100}%`}
-                    top={`${(1 - pickerColor.v) * 100}%`}
-                    transform="translate(-50%, -50%)"
-                    width="18px"
-                    height="18px"
-                    borderRadius="full"
-                    border="2px solid rgba(255,255,255,0.92)"
-                    boxShadow="0 0 0 1px rgba(15, 23, 42, 0.16), 0 8px 18px rgba(15, 23, 42, 0.18)"
-                    bg="transparent"
-                    pointerEvents="none"
-                  />
-                </Box>
-
-                <VStack flex="1" align="stretch" gap={3}>
-                  <HStack gap={3} align="center">
-                    <button
-                      aria-label={tt('settingPanel.theme.customColorPick', 'Accent color')}
-                      onClick={() => {
-                        if (!isLoading) {
-                          nativeColorInputRef.current?.click()
-                        }
-                      }}
-                      disabled={isLoading}
-                      style={{
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '16px',
-                        border: '1px solid var(--gpk-panel-accent-border)',
-                        background: previewHex,
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        flexShrink: 0,
-                      }}
+                  <HStack gap={2}>
+                    <Box
+                      width="10px"
+                      height="10px"
+                      borderRadius="full"
+                      bg={swatch}
+                      border="1px solid rgba(15, 23, 42, 0.12)"
                     />
-                    <input
-                      ref={nativeColorInputRef}
-                      type="color"
-                      value={normalizeHexColor(hexValue)}
-                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                        const nextValue = normalizeHexColor(event.target.value)
-                        setHexValue(nextValue)
-                        setPickerColor(hexToHsv(nextValue))
-                        void onApplyCustomTheme({ color: nextValue })
-                      }}
-                      style={{ display: 'none' }}
-                    />
-
-                    <input
-                      aria-label={tt('settingPanel.theme.customColorHex', 'Hex color')}
-                      type="text"
-                      value={hexValue}
-                      maxLength={7}
-                      placeholder="#4285f4"
-                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                        setHexValue(event.target.value)
-                      }}
-                      onBlur={() => void handleApplyHex()}
-                      onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
-                        if (event.key === 'Enter') {
-                          event.preventDefault()
-                          void handleApplyHex()
-                        }
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '12px 14px',
-                        borderRadius: '14px',
-                        border: `1px solid ${isValidHexColor(hexValue) ? 'var(--gpk-panel-accent-border)' : 'rgba(239, 68, 68, 0.45)'}`,
-                        background: 'rgba(255, 255, 255, 0.56)',
-                        color: 'var(--gem-sys-color--on-surface)',
-                        fontSize: '14px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                      }}
-                    />
+                    <Box as="span">{tt(meta.labelKey, meta.fallback)}</Box>
                   </HStack>
+                </Button>
+              )
+            })}
+          </HStack>
 
-                  <Box>
-                    <HStack justify="space-between" align="center" mb={2}>
-                      <Text fontSize="xs" color="gemOnSurfaceVariant">
-                        {tt('settingPanel.theme.hue', 'Hue')}
-                      </Text>
-                      <Text fontSize="xs" color="gemOnSurfaceVariant">
-                        {hexValue}
-                      </Text>
-                    </HStack>
-                    <Slider.Root
-                      min={0}
-                      max={360}
-                      step={1}
-                      value={[pickerColor.h]}
-                      onValueChange={(details) => {
-                        const nextHue = details.value[0] ?? pickerColor.h
-                        updateLocalColor({
-                          ...pickerColor,
-                          h: nextHue,
-                        })
-                      }}
-                      onValueChangeEnd={(details) => {
-                        const nextHue = details.value[0] ?? pickerColor.h
-                        const nextColor = {
-                          ...pickerColor,
-                          h: nextHue,
-                        }
-                        updateLocalColor(nextColor)
-                        void onApplyCustomTheme({ color: hsvToHex(nextColor) })
-                      }}
-                    >
-                      <Slider.Control>
-                        <Slider.Track bg="linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)">
-                          <Slider.Range bg="transparent" />
-                        </Slider.Track>
-                        <Slider.Thumb index={0} boxShadow="0 0 0 4px var(--gpk-panel-accent-soft)">
-                          <Slider.HiddenInput />
-                        </Slider.Thumb>
-                      </Slider.Control>
-                    </Slider.Root>
-                  </Box>
-                </VStack>
-              </HStack>
-            </VStack>
-          </Box>
-
-          <Box
-            pt={4}
-            borderTop="1px solid"
-            borderColor="var(--gpk-panel-accent-border)"
+          <HStack
+            align={{ base: 'stretch', md: 'flex-start' }}
+            gap={4}
+            flexDirection={{ base: 'column', md: 'row' }}
           >
-            <HStack justify="space-between" align="center" mb={3}>
-              <HStack gap={1.5}>
-                <Text fontSize="sm" color="gemOnSurface">
-                  {tt('settingPanel.theme.surfaceOpacity', 'Interface opacity')}
-                </Text>
-                <Tooltip
-                  content={tt(
-                    'settingPanel.theme.surfaceOpacityInfo',
-                    'Controls transparency for themed panels and containers.',
-                  )}
-                >
-                  <IconButton
-                    aria-label={tt('settingPanel.theme.surfaceOpacity', 'Interface opacity')}
-                    size="2xs"
-                    variant="ghost"
-                  >
-                    <HiOutlineInformationCircle />
-                  </IconButton>
-                </Tooltip>
-              </HStack>
-              <Text fontSize="xs" color="gemOnSurfaceVariant">
-                {localOpacity}%
-              </Text>
-            </HStack>
-            <Slider.Root
-              min={35}
-              max={100}
-              step={1}
-              value={[localOpacity]}
-              onValueChange={(details) => setLocalOpacity(details.value[0] ?? surfaceOpacity)}
-              onValueChangeEnd={(details) => void onApplyCustomTheme({ surfaceOpacity: details.value[0] ?? surfaceOpacity })}
+            <Box
+              ref={panelRef}
+              position="relative"
+              width={{ base: '100%', md: '220px' }}
+              height="164px"
+              borderRadius="xl"
+              overflow="hidden"
+              cursor={isLoading ? 'not-allowed' : 'crosshair'}
+              border="1px solid"
+              borderColor="var(--gpk-panel-accent-border)"
+              bg={`linear-gradient(to top, #000000, transparent), linear-gradient(to right, #ffffff, ${hueColor})`}
+              onPointerDown={handlePanelPointerDown}
+              onPointerMove={handlePanelPointerMove}
+              onPointerUp={(event) => void handlePanelPointerUp(event)}
+              onPointerCancel={() => setIsDraggingPanel(false)}
+              style={{ touchAction: 'none' }}
             >
-              <Slider.Control>
-                <Slider.Track bg="rgba(148, 163, 184, 0.2)">
-                  <Slider.Range bg="var(--gpk-panel-accent)" />
-                </Slider.Track>
-                <Slider.Thumb index={0} boxShadow="0 0 0 4px var(--gpk-panel-accent-soft)">
-                  <Slider.HiddenInput />
-                </Slider.Thumb>
-              </Slider.Control>
-            </Slider.Root>
-          </Box>
+              <Box
+                position="absolute"
+                left={`${pickerColor.s * 100}%`}
+                top={`${(1 - pickerColor.v) * 100}%`}
+                transform="translate(-50%, -50%)"
+                width="18px"
+                height="18px"
+                borderRadius="full"
+                border="2px solid rgba(255,255,255,0.92)"
+                boxShadow="0 0 0 1px rgba(15, 23, 42, 0.16), 0 8px 18px rgba(15, 23, 42, 0.18)"
+                bg="transparent"
+                pointerEvents="none"
+              />
+            </Box>
+
+            <VStack flex="1" align="stretch" gap={3}>
+              <HStack gap={3} align="center">
+                <button
+                  aria-label={tt(FIELD_META[activeField].labelKey, FIELD_META[activeField].fallback)}
+                  onClick={() => {
+                    if (!isLoading) {
+                      nativeColorInputRef.current?.click()
+                    }
+                  }}
+                  disabled={isLoading}
+                  style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '16px',
+                    border: '1px solid var(--gpk-panel-accent-border)',
+                    background: previewHex,
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    flexShrink: 0,
+                  }}
+                />
+                <input
+                  ref={nativeColorInputRef}
+                  type="color"
+                  value={normalizeHexColor(currentColor)}
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    const nextValue = normalizeHexColor(event.target.value)
+                    updateDraftColor(activeField, nextValue)
+                    setPickerColor(hexToHsv(nextValue))
+                    void onApplyCustomTheme({ [activeField]: nextValue })
+                  }}
+                  style={{ display: 'none' }}
+                />
+
+                <input
+                  aria-label={tt(FIELD_META[activeField].hexKey, FIELD_META[activeField].hexFallback)}
+                  type="text"
+                  value={currentColor}
+                  maxLength={7}
+                  placeholder="#4285f4"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    updateDraftColor(activeField, event.target.value)
+                  }}
+                  onBlur={() => void handleApplyHex()}
+                  onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      void handleApplyHex()
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '14px',
+                    border: `1px solid ${isValidHexColor(currentColor) ? 'var(--gpk-panel-accent-border)' : 'rgba(239, 68, 68, 0.45)'}`,
+                    background: 'rgba(255, 255, 255, 0.56)',
+                    color: 'var(--gem-sys-color--on-surface)',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  }}
+                />
+              </HStack>
+
+              <Box>
+                <HStack justify="space-between" align="center" mb={2}>
+                  <Text fontSize="xs" color="gemOnSurfaceVariant">
+                    {tt('settingPanel.theme.hue', 'Hue')}
+                  </Text>
+                  <Text fontSize="xs" color="gemOnSurfaceVariant">
+                    {currentColor}
+                  </Text>
+                </HStack>
+                <Slider.Root
+                  min={0}
+                  max={360}
+                  step={1}
+                  value={[pickerColor.h]}
+                  onValueChange={(details: { value: number[] }) => {
+                    const nextHue = details.value[0] ?? pickerColor.h
+                    const nextColor = {
+                      ...pickerColor,
+                      h: nextHue,
+                    }
+                    setPickerColor(nextColor)
+                    updateDraftColor(activeField, hsvToHex(nextColor))
+                  }}
+                  onValueChangeEnd={(details: { value: number[] }) => {
+                    const nextHue = details.value[0] ?? pickerColor.h
+                    const nextColor = {
+                      ...pickerColor,
+                      h: nextHue,
+                    }
+                    setPickerColor(nextColor)
+                    const nextHex = hsvToHex(nextColor)
+                    updateDraftColor(activeField, nextHex)
+                    void onApplyCustomTheme({ [activeField]: nextHex })
+                  }}
+                >
+                  <Slider.Control>
+                    <Slider.Track bg="linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)">
+                      <Slider.Range bg="transparent" />
+                    </Slider.Track>
+                    <Slider.Thumb index={0} boxShadow="0 0 0 4px var(--gpk-panel-accent-soft)">
+                      <Slider.HiddenInput />
+                    </Slider.Thumb>
+                  </Slider.Control>
+                </Slider.Root>
+              </Box>
+            </VStack>
+          </HStack>
         </VStack>
       </Box>
     </Box>

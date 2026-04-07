@@ -31,12 +31,16 @@
       "launcherLabel": "Theme",
       "customColorTitle": "Custom Accent",
       "customColorDescription": "Adjusting color or transparency will switch to the custom theme.",
-      "customColorPick": "Accent color",
-      "customColorHex": "Hex color",
+      "customColorPick": "Interface accent",
+      "customColorHex": "Interface accent hex",
       "customColorApply": "Use custom theme",
       "customColorActive": "Custom theme active",
-      "surfaceOpacity": "Interface opacity",
-      "surfaceOpacityInfo": "Controls transparency for themed panels and containers."
+      "surfaceOpacity": "Chat surface opacity",
+      "surfaceOpacityInfo": "Controls transparency for chat cards, title bars, and composer.",
+      "surfaceColorPick": "Chat surface",
+      "surfaceColorHex": "Surface hex",
+      "textColorPick": "Chat text",
+      "textColorHex": "Text hex"
     },
     "config": {
       "theme": {
@@ -44,7 +48,8 @@
         "views": {
           "index": {
             "title": "Theme Settings",
-            "description": "Customize Gemini's color theme to match your style."
+            "description": "Customize Gemini's color theme to match your style.",
+            "siteDescription": "Customize colors and wallpaper for $1."
           }
         }
       }

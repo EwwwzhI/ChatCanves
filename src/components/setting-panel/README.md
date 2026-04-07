@@ -1,6 +1,6 @@
 # Setting Panel Component
 
-Theme-only settings UI for Gemini.
+Theme-only settings UI for ChatCanves.
 
 ## Current Behavior
 
@@ -12,9 +12,9 @@ Theme-only settings UI for Gemini.
 ## Included Features
 
 - Appearance mode: light, dark, system
-- Preset theme colors
-- Custom accent color
-- Interface opacity control
+- Custom interface accent color
+- Custom chat surface color
+- Custom chat text color
 - Custom background image and related visual options
 
 ## Usage
@@ -31,6 +31,6 @@ The panel manages its own open/close state. No external open event is required.
 
 ## Notes
 
-- The component is intended to be mounted in the Gemini content overlay.
+- The component is intended to be mounted in the content overlay.
 - Visual styling depends on the theme palette variables provided by the overlay provider.
 - The panel no longer includes sidebar navigation, multi-page routing, popup integration, or prompt/tool modules.

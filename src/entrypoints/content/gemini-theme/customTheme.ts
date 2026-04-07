@@ -1,12 +1,23 @@
-export const CUSTOM_THEME_KEY = 'custom' as const
-
 export interface CustomThemeSettings {
-  color: string
+  accentColor: string
+  surfaceColor: string
+  textColor: string
   surfaceOpacity: number
 }
 
+type LegacyCustomThemeSettings = Partial<CustomThemeSettings> & {
+  color?: string
+}
+
+export const CUSTOM_THEME_KEY = 'custom' as const
+
+const DEFAULT_LIGHT_TEXT_COLOR = '#0f172a'
+const DEFAULT_DARK_TEXT_COLOR = '#f8fafc'
+
 export const DEFAULT_CUSTOM_THEME_SETTINGS: CustomThemeSettings = {
-  color: '#4285f4',
+  accentColor: '#4285f4',
+  surfaceColor: '#4285f4',
+  textColor: DEFAULT_LIGHT_TEXT_COLOR,
   surfaceOpacity: 88,
 }
 
@@ -37,7 +48,7 @@ function expandHexColor(value: string): string {
 export function normalizeHexColor(value: string): string {
   const prefixed = expandHexColor(value)
   if (!HEX_COLOR_PATTERN.test(prefixed)) {
-    return DEFAULT_CUSTOM_THEME_SETTINGS.color
+    return DEFAULT_CUSTOM_THEME_SETTINGS.accentColor
   }
 
   if (prefixed.length === 4) {
@@ -53,20 +64,42 @@ export function isValidHexColor(value: string): boolean {
 }
 
 export function normalizeSurfaceOpacity(value: number): number {
-  if (!Number.isFinite(value)) {
-    return DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity
+  void value
+  return DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity
+}
+
+export function getDefaultChatTextColor(): string {
+  if (typeof document === 'undefined') {
+    return DEFAULT_LIGHT_TEXT_COLOR
   }
-  return clamp(Math.round(value), MIN_SURFACE_OPACITY, MAX_SURFACE_OPACITY)
+
+  const root = document.body ?? document.documentElement
+  if (
+    root.classList.contains('dark-theme')
+    || document.documentElement.classList.contains('dark-theme')
+  ) {
+    return DEFAULT_DARK_TEXT_COLOR
+  }
+
+  return DEFAULT_LIGHT_TEXT_COLOR
 }
 
 export function normalizeCustomThemeSettings(
-  raw: Partial<CustomThemeSettings> | null | undefined,
+  raw: LegacyCustomThemeSettings | null | undefined,
 ): CustomThemeSettings {
+  const legacyColor = raw?.color
+  const accentColor = normalizeHexColor(
+    raw?.accentColor ?? legacyColor ?? DEFAULT_CUSTOM_THEME_SETTINGS.accentColor,
+  )
+  const surfaceColor = normalizeHexColor(
+    raw?.surfaceColor ?? legacyColor ?? accentColor,
+  )
+
   return {
-    color: normalizeHexColor(raw?.color ?? DEFAULT_CUSTOM_THEME_SETTINGS.color),
-    surfaceOpacity: normalizeSurfaceOpacity(
-      raw?.surfaceOpacity ?? DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity,
-    ),
+    accentColor,
+    surfaceColor,
+    textColor: normalizeHexColor(raw?.textColor ?? getDefaultChatTextColor()),
+    surfaceOpacity: DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity,
   }
 }
 
@@ -140,141 +173,194 @@ function buildToneScale(color: string): Record<number, string> {
   }
 }
 
+function buildChatSurfaceSelectorList(): string {
+  return [
+    'model-response response-container>div.response-container',
+    'dual-model-response',
+    'extensions-window>div.extensions-window-container',
+    'saved-info-page>div.page-container>div.page-content',
+    'input-container input-area-v2',
+    'input-area-v2>div>auto-suggest>div',
+    'div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper',
+    'intent-card>button',
+  ].join(',\n')
+}
+
+function buildChatTextSelectorList(): string {
+  return [
+    'model-response response-container>div.response-container',
+    'model-response response-container>div.response-container :is(p, span, li, strong, em, code, pre, h1, h2, h3, h4, h5, h6, a)',
+    'dual-model-response',
+    'dual-model-response :is(p, span, li, strong, em, code, pre, h1, h2, h3, h4, h5, h6, a)',
+    'extensions-window>div.extensions-window-container',
+    'saved-info-page>div.page-container>div.page-content',
+    'input-container input-area-v2',
+    'input-container input-area-v2 textarea',
+    'input-area-v2>div>auto-suggest>div',
+    'div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper',
+    'user-query user-query-content span.user-query-bubble-with-background',
+  ].join(',\n')
+}
+
 export function buildCustomThemeCss(raw: Partial<CustomThemeSettings>): string {
   const settings = normalizeCustomThemeSettings(raw)
-  const tones = buildToneScale(settings.color)
+  const accentTones = buildToneScale(settings.accentColor)
+  const surfaceTones = buildToneScale(settings.surfaceColor)
   const opacity = normalizeSurfaceOpacity(settings.surfaceOpacity)
-  const lightPanelOpacity = clamp(opacity, 35, 100)
-  const lightPanelStrongOpacity = clamp(opacity + 8, 35, 100)
-  const lightSideNavOpacity = clamp(opacity - 4, 35, 100)
-  const lightBubbleOpacity = clamp(opacity + 4, 35, 100)
-  const darkPanelOpacity = clamp(opacity, 64, 100)
-  const darkPanelStrongOpacity = clamp(opacity + 6, 70, 100)
-  const darkSideNavOpacity = clamp(opacity + 10, 74, 100)
-  const darkBubbleOpacity = clamp(opacity + 4, 64, 100)
+  const accentContrast = getReadableTextColor(settings.accentColor)
+  const chatText = normalizeHexColor(settings.textColor)
+  const chatTextMuted = hexToRgbaString(chatText, 0.76)
+  const selectionColor = hexToRgbaString(settings.accentColor, 0.26)
+  const lightPanelOpacity = clamp(opacity + 6, 42, 100)
+  const lightPanelStrongOpacity = clamp(opacity + 14, 48, 100)
+  const lightSideNavOpacity = clamp(opacity - 2, 35, 96)
+  const lightBubbleOpacity = clamp(opacity + 10, 48, 100)
+  const darkPanelOpacity = clamp(opacity + 6, 72, 100)
+  const darkPanelStrongOpacity = clamp(opacity + 12, 76, 100)
+  const darkSideNavOpacity = clamp(opacity + 10, 76, 100)
+  const darkBubbleOpacity = clamp(opacity + 10, 76, 100)
+  const surfaceSelectors = buildChatSurfaceSelectorList()
+  const chatTextSelectors = buildChatTextSelectorList()
 
   return `
 :where(.theme-host) {
-  --theme-25: ${tones[25]};
-  --theme-50: ${tones[50]};
-  --theme-100: ${tones[100]};
-  --theme-200: ${tones[200]};
-  --theme-300: ${tones[300]};
-  --theme-400: ${tones[400]};
-  --theme-500: ${tones[500]};
-  --theme-600: ${tones[600]};
-  --theme-700: ${tones[700]};
-  --theme-800: ${tones[800]};
-  --theme-900: ${tones[900]};
-  --theme-950: ${tones[950]};
-  --theme-1000: ${tones[1000]};
+  --accent-25: ${accentTones[25]};
+  --accent-50: ${accentTones[50]};
+  --accent-100: ${accentTones[100]};
+  --accent-200: ${accentTones[200]};
+  --accent-300: ${accentTones[300]};
+  --accent-400: ${accentTones[400]};
+  --accent-500: ${accentTones[500]};
+  --accent-600: ${accentTones[600]};
+  --accent-700: ${accentTones[700]};
+  --accent-800: ${accentTones[800]};
+  --accent-900: ${accentTones[900]};
+  --accent-950: ${accentTones[950]};
+  --accent-1000: ${accentTones[1000]};
+  --surface-25: ${surfaceTones[25]};
+  --surface-50: ${surfaceTones[50]};
+  --surface-100: ${surfaceTones[100]};
+  --surface-200: ${surfaceTones[200]};
+  --surface-300: ${surfaceTones[300]};
+  --surface-400: ${surfaceTones[400]};
+  --surface-500: ${surfaceTones[500]};
+  --surface-600: ${surfaceTones[600]};
+  --surface-700: ${surfaceTones[700]};
+  --surface-800: ${surfaceTones[800]};
+  --surface-900: ${surfaceTones[900]};
+  --surface-950: ${surfaceTones[950]};
+  --surface-1000: ${surfaceTones[1000]};
+  --ccv-chat-text: ${chatText};
+  --ccv-chat-text-muted: ${chatTextMuted};
+  --ccv-chat-surface-border: ${hexToRgbaString(settings.surfaceColor, 0.28)};
+  --ccv-gemini-chat-surface-light: ${hexToRgbaString(settings.surfaceColor, 0.68)};
+  --ccv-gemini-chat-surface-light-strong: ${hexToRgbaString(settings.surfaceColor, 0.76)};
+  --ccv-gemini-chat-surface-dark: ${hexToRgbaString(settings.surfaceColor, 0.78)};
+  --ccv-gemini-chat-surface-dark-strong: ${hexToRgbaString(settings.surfaceColor, 0.86)};
+  --ccv-gemini-chat-border-light: ${hexToRgbaString(settings.surfaceColor, 0.22)};
+  --ccv-gemini-chat-border-dark: ${hexToRgbaString(settings.surfaceColor, 0.3)};
 }
 
 :where(.theme-host):where(.light-theme),
 :root .light-theme {
-  --gem-sys-color--primary: var(--theme-600);
-  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-50) ${lightSideNavOpacity}%, white);
-  --gem-sys-color--surface-container: color-mix(in srgb, var(--theme-50) ${lightPanelOpacity}%, transparent);
-  --gem-sys-color--surface-container-high: color-mix(in srgb, var(--theme-200) ${lightPanelStrongOpacity}%, transparent);
-  --gem-sys-color--primary-container: color-mix(in srgb, var(--theme-200) ${lightPanelStrongOpacity}%, transparent);
-  --gem-sys-color--on-primary-container: var(--theme-900);
-  --gem-sys-color--on-surface: var(--theme-950);
-  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-50) ${lightPanelStrongOpacity}%, #ffffff);
-  --gem-sys-color--secondary-container: color-mix(in srgb, var(--theme-100) ${lightPanelOpacity}%, transparent);
-  --gem-sys-color--on-secondary-container: var(--theme-800);
-  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-50) ${clamp(lightPanelOpacity - 6, 35, 100)}%, transparent);
-  --gem-sys-color--on-surface-variant: var(--theme-900);
-  --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--theme-100) ${lightPanelStrongOpacity}%, transparent);
-  --gem-sys-color--outline-variant: color-mix(in srgb, var(--theme-300), transparent 34%);
+  --gem-sys-color--primary: var(--accent-600);
+  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--accent-50) ${lightSideNavOpacity}%, white);
+  --gem-sys-color--surface-container: color-mix(in srgb, var(--surface-50) ${lightPanelOpacity}%, transparent);
+  --gem-sys-color--surface-container-high: color-mix(in srgb, var(--surface-100) ${lightPanelStrongOpacity}%, transparent);
+  --gem-sys-color--primary-container: color-mix(in srgb, var(--accent-100) ${lightPanelStrongOpacity}%, transparent);
+  --gem-sys-color--on-primary-container: ${accentContrast};
+  --gem-sys-color--on-surface: var(--accent-950);
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--surface-50) ${lightPanelStrongOpacity}%, #ffffff);
+  --gem-sys-color--secondary-container: color-mix(in srgb, var(--surface-100) ${lightPanelOpacity}%, transparent);
+  --gem-sys-color--on-secondary-container: var(--accent-900);
+  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--surface-25) ${clamp(lightPanelOpacity - 6, 35, 100)}%, transparent);
+  --gem-sys-color--on-surface-variant: var(--accent-900);
+  --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--surface-100) ${lightPanelStrongOpacity}%, transparent);
+  --gem-sys-color--outline-variant: color-mix(in srgb, var(--surface-300), transparent 34%);
+  --gem-sys-color--surface-bright: color-mix(in srgb, var(--surface-50) ${lightPanelStrongOpacity}%, #ffffff);
 }
 
-:where(.theme-host):where(.light-theme) model-response response-container>div.response-container,
-:where(.theme-host):where(.light-theme) dual-model-response,
-:where(.theme-host):where(.light-theme) extensions-window>div.extensions-window-container,
-:where(.theme-host):where(.light-theme) saved-info-page>div.page-container>div.page-content,
-:where(.theme-host):where(.light-theme) input-container input-area-v2,
-:where(.theme-host):where(.light-theme) input-area-v2>div>auto-suggest>div,
-:where(.theme-host):where(.light-theme) div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper,
-:where(.theme-host):where(.light-theme) intent-card>button,
-body.light-theme model-response response-container>div.response-container,
-body.light-theme dual-model-response,
-body.light-theme extensions-window>div.extensions-window-container,
-body.light-theme saved-info-page>div.page-container>div.page-content,
-body.light-theme input-container input-area-v2,
-body.light-theme input-area-v2>div>auto-suggest>div,
-body.light-theme div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper,
-body.light-theme intent-card>button {
-  background: color-mix(in srgb, var(--theme-50) ${lightPanelStrongOpacity}%, transparent) !important;
-  border-color: color-mix(in srgb, var(--theme-300), transparent 42%) !important;
+:where(.theme-host):where(.light-theme) ${surfaceSelectors},
+body.light-theme ${surfaceSelectors} {
+  background: var(--ccv-gemini-chat-surface-light-strong) !important;
+  border-color: var(--ccv-gemini-chat-border-light) !important;
 }
 
 :where(.theme-host):where(.light-theme) user-query user-query-content span.user-query-bubble-with-background,
 body.light-theme user-query user-query-content span.user-query-bubble-with-background {
-  background: color-mix(in srgb, var(--theme-100) ${lightBubbleOpacity}%, transparent) !important;
+  background: var(--ccv-gemini-chat-surface-light) !important;
+  color: var(--ccv-chat-text) !important;
+}
+
+:where(.theme-host):where(.light-theme) ${chatTextSelectors},
+body.light-theme ${chatTextSelectors} {
+  color: var(--ccv-chat-text) !important;
+}
+
+:where(.theme-host):where(.light-theme) input-container input-area-v2 textarea::placeholder,
+body.light-theme input-container input-area-v2 textarea::placeholder {
+  color: var(--ccv-chat-text-muted) !important;
 }
 
 :where(.theme-host)::selection {
-  background-color: color-mix(in srgb, var(--theme-200), transparent 10%);
+  background-color: ${selectionColor};
 }
 
 :where(.theme-host):where(.light-theme) input-area-v2 button.send-button mat-icon.send-button-icon,
 :where(.theme-host):where(.light-theme) input-area-v2 speech-dictation-mic-button button mat-icon {
-  color: var(--theme-600);
+  color: var(--accent-600);
 }
 
 :where(.theme-host):where(.dark-theme) {
-  --gem-sys-color--primary: var(--theme-500);
-  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--theme-950) ${darkSideNavOpacity}%, black) !important;
-  --gem-sys-color--primary-container: color-mix(in srgb, var(--theme-800) ${darkPanelStrongOpacity}%, transparent);
-  --gem-sys-color--surface-container: color-mix(in srgb, var(--theme-900) ${darkPanelOpacity}%, transparent);
-  --gem-sys-color--surface-container-high: color-mix(in srgb, var(--theme-700) ${darkPanelStrongOpacity}%, transparent);
-  --gem-sys-color--surface: color-mix(in srgb, var(--theme-950) ${darkSideNavOpacity}%, black 18%);
-  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--theme-950) ${darkSideNavOpacity}%, black 45%) !important;
-  --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--theme-800) ${darkPanelStrongOpacity}%, transparent);
-  --gem-sys-color--surface-container-lowest: color-mix(in srgb, var(--theme-900) ${darkPanelOpacity}%, transparent);
+  --gem-sys-color--primary: var(--accent-500);
+  --bard-color-sidenav-background-desktop: color-mix(in srgb, var(--accent-950) ${darkSideNavOpacity}%, black) !important;
+  --gem-sys-color--primary-container: color-mix(in srgb, var(--accent-800) ${darkPanelStrongOpacity}%, transparent);
+  --gem-sys-color--surface-container: color-mix(in srgb, var(--surface-900) ${darkPanelOpacity}%, transparent);
+  --gem-sys-color--surface-container-high: color-mix(in srgb, var(--surface-800) ${darkPanelStrongOpacity}%, transparent);
+  --gem-sys-color--surface: color-mix(in srgb, var(--surface-950) ${darkSideNavOpacity}%, black 18%);
+  --bard-color-surface-dim-tmp: color-mix(in srgb, var(--surface-950) ${darkSideNavOpacity}%, black 45%) !important;
+  --gem-sys-color--surface-container-highest: color-mix(in srgb, var(--surface-800) ${darkPanelStrongOpacity}%, transparent);
+  --gem-sys-color--surface-container-lowest: color-mix(in srgb, var(--surface-900) ${darkPanelOpacity}%, transparent);
   --gem-sys-color--on-surface-variant: rgba(255, 255, 255, 0.92);
-  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--theme-950) ${darkPanelOpacity}%, transparent);
-  --gem-sys-color--surface-bright: color-mix(in srgb, var(--theme-700) ${darkPanelStrongOpacity}%, black 40%);
-  --gem-sys-color--on-primary: #ffffff;
-  --mat-slide-toggle-selected-track-color: var(--theme-500);
+  --gem-sys-color--surface-container-low: color-mix(in srgb, var(--surface-950) ${darkPanelOpacity}%, transparent);
+  --gem-sys-color--surface-bright: color-mix(in srgb, var(--surface-700) ${darkPanelStrongOpacity}%, black 40%);
+  --gem-sys-color--on-primary: ${accentContrast};
+  --mat-slide-toggle-selected-track-color: var(--accent-500);
   --mat-slide-toggle-selected-handle-color: white;
-  --gem-sys-color--on-primary-container: white;
-  --gem-sys-color--outline-variant: color-mix(in srgb, var(--theme-800), transparent 20%);
-  --gem-sys-color--secondary-container: color-mix(in srgb, var(--theme-700) ${darkPanelStrongOpacity}%, transparent);
-  --gem-sys-color--on-secondary-container: var(--theme-100);
+  --gem-sys-color--on-primary-container: ${accentContrast};
+  --gem-sys-color--outline-variant: color-mix(in srgb, var(--surface-800), transparent 20%);
+  --gem-sys-color--secondary-container: color-mix(in srgb, var(--surface-700) ${darkPanelStrongOpacity}%, transparent);
+  --gem-sys-color--on-secondary-container: var(--accent-100);
 }
 
-:where(.theme-host):where(.dark-theme) model-response response-container>div.response-container,
-:where(.theme-host):where(.dark-theme) dual-model-response,
-:where(.theme-host):where(.dark-theme) extensions-window>div.extensions-window-container,
-:where(.theme-host):where(.dark-theme) saved-info-page>div.page-container>div.page-content,
-:where(.theme-host):where(.dark-theme) input-container input-area-v2,
-:where(.theme-host):where(.dark-theme) input-area-v2>div>auto-suggest>div,
-:where(.theme-host):where(.dark-theme) div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper,
-:where(.theme-host):where(.dark-theme) intent-card>button,
-body.dark-theme model-response response-container>div.response-container,
-body.dark-theme dual-model-response,
-body.dark-theme extensions-window>div.extensions-window-container,
-body.dark-theme saved-info-page>div.page-container>div.page-content,
-body.dark-theme input-container input-area-v2,
-body.dark-theme input-area-v2>div>auto-suggest>div,
-body.dark-theme div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper,
-body.dark-theme intent-card>button {
-  background: color-mix(in srgb, var(--theme-900) ${darkPanelStrongOpacity}%, transparent) !important;
-  border-color: color-mix(in srgb, var(--theme-700), transparent 26%) !important;
+:where(.theme-host):where(.dark-theme) ${surfaceSelectors},
+body.dark-theme ${surfaceSelectors} {
+  background: var(--ccv-gemini-chat-surface-dark-strong) !important;
+  border-color: var(--ccv-gemini-chat-border-dark) !important;
 }
 
 :where(.theme-host):where(.dark-theme) user-query user-query-content span.user-query-bubble-with-background,
 body.dark-theme user-query user-query-content span.user-query-bubble-with-background {
-  background: color-mix(in srgb, var(--theme-800) ${darkBubbleOpacity}%, transparent) !important;
+  background: var(--ccv-gemini-chat-surface-dark) !important;
+  color: var(--ccv-chat-text) !important;
+}
+
+:where(.theme-host):where(.dark-theme) ${chatTextSelectors},
+body.dark-theme ${chatTextSelectors} {
+  color: var(--ccv-chat-text) !important;
+}
+
+:where(.theme-host):where(.dark-theme) input-container input-area-v2 textarea::placeholder,
+body.dark-theme input-container input-area-v2 textarea::placeholder {
+  color: var(--ccv-chat-text-muted) !important;
 }
 
 :where(.theme-host):where(.dark-theme)::selection {
-  background-color: var(--theme-800);
+  background-color: var(--accent-800);
 }
 
 :where(.theme-host):where(.dark-theme) button.send-button.submit {
-  background-color: var(--theme-700) !important;
+  background-color: var(--accent-700) !important;
 }
 `
 }

@@ -3,15 +3,16 @@ import { Box, VStack } from '@chakra-ui/react'
 import {
   applyCustomTheme,
   getCustomThemeSettings,
+  getCurrentSiteContext,
   getAppearanceState,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
   getThemeBackgroundSettings,
+  getThemeBackgroundSettingsStorage,
   normalizeThemeBackgroundSettings,
   removeThemeBackground,
   resolveThemeBackgroundPreviewUrl,
   setAppearanceMode,
   subscribeSystemThemeChange,
-  themeBackgroundSettingsStorage,
   ThemeBackgroundError,
   updateThemeBackgroundSettings,
   uploadThemeBackground,
@@ -59,6 +60,11 @@ function getBackgroundErrorMessage(error: unknown): string {
 }
 
 export function ThemeSettingsView() {
+  const siteContext = useMemo(() => getCurrentSiteContext(), [])
+  const backgroundSettingsStorage = useMemo(
+    () => getThemeBackgroundSettingsStorage(siteContext.siteKey),
+    [siteContext.siteKey],
+  )
   const {
     setSelectedThemeKey,
     customTheme,
@@ -94,7 +100,7 @@ export function ThemeSettingsView() {
   }, [loadBackgroundState])
 
   useEffect(() => {
-    const unwatch = themeBackgroundSettingsStorage.watch(async (newSettings) => {
+    const unwatch = backgroundSettingsStorage.watch(async (newSettings) => {
       if (!newSettings) return
       try {
         const normalizedSettings = normalizeThemeBackgroundSettings(newSettings)
@@ -105,7 +111,7 @@ export function ThemeSettingsView() {
       }
     })
     return unwatch
-  }, [])
+  }, [backgroundSettingsStorage])
 
   useEffect(() => {
     if (!isPanelOpen || appearanceState.mode !== 'system') {
@@ -120,7 +126,13 @@ export function ThemeSettingsView() {
   }, [appearanceState.mode, isPanelOpen])
 
   const handleApplyCustomTheme = useCallback(
-    async (partialSettings: { color?: string; surfaceOpacity?: number }) => {
+    async (
+      partialSettings: {
+        accentColor?: string
+        surfaceColor?: string
+        textColor?: string
+      },
+    ) => {
       const nextSettings = await applyCustomTheme({
         ...customTheme,
         ...partialSettings,
@@ -252,11 +264,18 @@ export function ThemeSettingsView() {
               backgroundEnabled={previewState.settings.backgroundImageEnabled}
               backgroundUrl={previewState.resolvedBackgroundUrl}
               blurPx={previewState.settings.backgroundBlurPx}
-              sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
+              sidebarScrimEnabled={
+                siteContext.capabilities.sidebarScrim
+                && previewState.settings.sidebarScrimEnabled
+              }
               sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
-              messageGlassEnabled={previewState.settings.messageGlassEnabled}
+              messageGlassEnabled={
+                siteContext.capabilities.messageGlass
+                && previewState.settings.messageGlassEnabled
+              }
               accentColor={accentColor}
-              surfaceOpacity={customTheme.surfaceOpacity}
+              surfaceColor={customTheme.surfaceColor}
+              textColor={customTheme.textColor}
             />
           </Box>
 
@@ -266,12 +285,14 @@ export function ThemeSettingsView() {
             isLoading={false}
           />
           <ColorPresets
-            customColor={customTheme.color}
-            surfaceOpacity={customTheme.surfaceOpacity}
+            accentColor={customTheme.accentColor}
+            surfaceColor={customTheme.surfaceColor}
+            textColor={customTheme.textColor}
             onApplyCustomTheme={handleApplyCustomTheme}
             isLoading={false}
           />
           <CustomBackground
+            capabilities={siteContext.capabilities}
             state={backgroundState}
             isLoading={isBackgroundLoading}
             onToggleBackground={handleToggleBackground}
