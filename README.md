@@ -13,20 +13,6 @@ ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com
 - Supports custom wallpaper, blur, sidebar readability scrim, and message glass effect
 - Persists theme settings locally in the browser
 
-## Current Product Scope
-
-This repository is intentionally trimmed to the theme edition only.
-
-Removed modules:
-
-- Prompt entrance
-- Quick follow-up
-- Chat outline
-- Chain prompt
-- Popup surface
-- What's new and badge flows
-- Stuff page enhancements
-
 ## Local Development
 
 ```bash
@@ -64,19 +50,6 @@ Use the GitHub Release instead:
 5. Enable Developer mode
 6. Click `Load unpacked`
 7. Select the extracted extension directory
-
-## Create A Release
-
-This repository uses a manual GitHub Actions release flow.
-
-1. Open `Actions`
-2. Select `Release`
-3. Click `Run workflow`
-4. Enter a version such as `0.1.1`
-5. Optionally fill release notes
-6. Run the workflow
-
-The workflow will build the extension zip and publish a GitHub Release automatically.
 
 ## Repository
 
