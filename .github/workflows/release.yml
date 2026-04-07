@@ -1,78 +1,86 @@
 name: Release
 
 on:
-  workflow_dispatch:  # Manual trigger only - run when ready to release
+  workflow_dispatch:
     inputs:
-      dry-run:
-        description: 'Run in dry-run mode (preview only, no actual release)'
+      version:
+        description: Release version without the leading v
+        required: true
+        type: string
+      prerelease:
+        description: Mark this release as a prerelease
         required: false
         type: boolean
         default: false
+      notes:
+        description: Optional release notes
+        required: false
+        type: string
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
 
 jobs:
   release:
-    name: Release
+    name: Build And Publish Release
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: '22.14.0'
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 1: Predict next version using semantic-release dry-run
-      # This allows us to build with the correct version before actual release
-      - name: Get next release version
-        id: version
+      - name: Build release zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: pnpm zip
+
+      - name: Collect zip assets
+        id: assets
+        shell: bash
         run: |
-          # Run semantic-release in dry-run mode to predict the next version
-          DRY_RUN_OUTPUT=$(pnpm exec semantic-release --dry-run 2>&1 || true)
-          echo "$DRY_RUN_OUTPUT"
-          
-          # Extract version from dry-run output
-          NEXT_VERSION=$(echo "$DRY_RUN_OUTPUT" | grep -oP 'The next release version is \K[0-9.]+' || echo "")
-          
-          if [ -z "$NEXT_VERSION" ]; then
-            echo "No release will be created (no relevant commits)"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Next release version: $NEXT_VERSION"
-            echo "version=$NEXT_VERSION" >> $GITHUB_OUTPUT
-            echo "skip=false" >> $GITHUB_OUTPUT
+          mapfile -t files < <(find .output -type f -name '*.zip' | sort)
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No zip assets were generated.'
+            exit 1
           fi
 
-      # Step 2: Build and Package extension with the predicted version
-      # 'pnpm run zip' (wxt zip) automatically runs build before packaging.
-      # The RELEASE_VERSION env var is read by wxt.config.ts for both build and zip.
-      - name: Build and Package
-        if: steps.version.outputs.skip == 'false'
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: pnpm run zip
+          {
+            echo 'files<<EOF'
+            printf '%s\n' "${files[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
-      # Step 3: Execute actual release
-      # semantic-release will update version, create changelog, commit, tag, and publish
-      - name: Release
-        if: steps.version.outputs.skip == 'false' && github.event.inputs.dry-run == 'false'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec semantic-release
+      - name: Write release notes
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.notes }}" ]; then
+            printf '%s\n' "${{ inputs.notes }}" > RELEASE_NOTES.md
+          else
+            cat > RELEASE_NOTES.md <<EOF
+          ChatCanves v${{ inputs.version }}
+
+          Download the attached zip asset and extract it locally.
+          Then open chrome://extensions, enable Developer mode, and load the extracted extension directory.
+          EOF
+          fi
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: ChatCanves v${{ inputs.version }}
+          body_path: RELEASE_NOTES.md
+          files: ${{ steps.assets.outputs.files }}
+          prerelease: ${{ inputs.prerelease }}

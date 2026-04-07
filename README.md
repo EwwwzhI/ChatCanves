@@ -49,6 +49,33 @@ pnpm build
 4. Click `Load unpacked`
 5. Select `.output/chrome-mv3`
 
+## Release Usage
+
+If you only want to use the extension, you do not need to run `pnpm install`.
+
+Use the GitHub Release instead:
+
+1. Open the repository `Releases` page
+2. Download the attached zip asset for the version you want
+3. Extract the zip locally
+4. Open `chrome://extensions`
+5. Enable Developer mode
+6. Click `Load unpacked`
+7. Select the extracted extension directory
+
+## Create A Release
+
+This repository uses a manual GitHub Actions release flow.
+
+1. Open `Actions`
+2. Select `Release`
+3. Click `Run workflow`
+4. Enter a version such as `0.1.1`
+5. Optionally fill release notes
+6. Run the workflow
+
+The workflow will build the extension zip and publish a GitHub Release automatically.
+
 ## Repository
 
 - Source: [github.com/EwwwzhI/ChatCanves](https://github.com/EwwwzhI/ChatCanves)
