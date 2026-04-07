@@ -9,6 +9,8 @@ interface LivePreviewProps {
   sidebarScrimEnabled: boolean
   sidebarScrimIntensity: number
   messageGlassEnabled: boolean
+  accentColor: string
+  surfaceOpacity: number
 }
 
 function PreviewGeminiIcon() {
@@ -65,6 +67,8 @@ export function LivePreview({
   sidebarScrimEnabled,
   sidebarScrimIntensity,
   messageGlassEnabled,
+  accentColor,
+  surfaceOpacity,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
@@ -77,11 +81,12 @@ export function LivePreview({
     && sidebarScrimIntensity > 0
   const sidebarScrimAlpha = (Math.min(100, Math.max(0, sidebarScrimIntensity)) / 100)
     .toFixed(2)
+  const surfaceTint = Math.min(100, Math.max(35, surfaceOpacity)) / 100
   const previewTitle = t('settingPanel.theme.livePreview')
 
   return (
     <Box>
-      <Heading size="sm" mb={3} textAlign="center">
+      <Heading size="sm" mb={3}>
         {previewTitle === 'settingPanel.theme.livePreview' ? 'Live Preview' : previewTitle}
       </Heading>
 
@@ -114,7 +119,13 @@ export function LivePreview({
           </Box>
         )}
 
-        <HStack align="stretch" minH="320px" gap={0} position="relative" zIndex={1}>
+        <HStack
+          align="stretch"
+          minH={{ base: '340px', md: '380px' }}
+          gap={0}
+          position="relative"
+          zIndex={1}
+        >
           <VStack
             width="72px"
             p={3}
@@ -156,7 +167,7 @@ export function LivePreview({
                 h="24px"
                 px={1.5}
                 borderRadius="full"
-                bg={isActive ? 'gemPrimaryContainer' : 'transparent'}
+                bg={isActive ? accentColor : 'transparent'}
               >
                 <Box
                   h="6px"
@@ -164,7 +175,7 @@ export function LivePreview({
                   borderRadius="full"
                   bg={
                     isActive
-                      ? 'gemOnPrimaryContainer'
+                      ? 'rgba(255,255,255,0.92)'
                       : 'color(from var(--gem-sys-color--on-surface-variant, #5f6368) srgb r g b/.45)'
                   }
                 />
@@ -217,15 +228,15 @@ export function LivePreview({
                 borderRadius="xl"
                 borderBottomRightRadius="sm"
                 bg={messageGlassEnabled
-                  ? 'color-mix(in srgb, var(--gem-sys-color--surface-container-high), transparent 60%)'
-                  : 'var(--gem-sys-color--surface-container-high, var(--gem-sys-color--surface-container, #eef2ef))'}
+                  ? `color-mix(in srgb, ${accentColor}, transparent 78%)`
+                  : `rgba(255, 255, 255, ${Math.max(0.18, surfaceTint * 0.45).toFixed(2)})`}
                 backdropFilter={messageGlassEnabled ? 'blur(20px)' : undefined}
                 border={messageGlassEnabled ? '1px solid #f2f2f2' : undefined}
                 color="gemOnSurface"
                 fontSize="xs"
                 lineHeight="1.4"
               >
-                Summarize Gemini Power Kit updates.
+                Tune the panel accent and wallpaper atmosphere.
               </Box>
             </Box>
 
@@ -243,11 +254,11 @@ export function LivePreview({
                 borderRadius="xl"
                 bg={messageGlassEnabled
                   ? isDark
-                    ? 'color-mix(in srgb, var(--theme-600), transparent 60%)'
-                    : 'color-mix(in srgb, var(--theme-50), transparent 80%)'
+                    ? `color-mix(in srgb, ${accentColor}, transparent 58%)`
+                    : `color-mix(in srgb, ${accentColor}, transparent 82%)`
                   : isDark
-                    ? 'transparent'
-                    : 'var(--theme-25, color-mix(in srgb, var(--gem-sys-color--surface-container), #ffffff 35%))'}
+                    ? `rgba(15, 23, 42, ${Math.max(0.2, surfaceTint * 0.55).toFixed(2)})`
+                    : `rgba(255, 255, 255, ${Math.max(0.24, surfaceTint * 0.7).toFixed(2)})`}
                 backdropFilter={messageGlassEnabled ? 'blur(20px)' : undefined}
                 border={messageGlassEnabled && !isDark ? '1px solid #f2f2f2' : undefined}
                 boxShadow={messageGlassEnabled && isDark ? '0 0 1px 0 #ffffff' : undefined}
@@ -255,7 +266,7 @@ export function LivePreview({
                 fontSize="xs"
                 lineHeight="1.45"
               >
-                Added chat outline, quick follow-up, and prompt chaining support.
+                Custom colors and transparency make the workspace feel more personal.
               </Box>
             </HStack>
 
@@ -281,8 +292,8 @@ export function LivePreview({
                 display="inline-flex"
                 alignItems="center"
                 justifyContent="center"
-                bg="var(--gem-sys-color--primary-container, var(--gem-sys-color--primary, #1a73e8))"
-                color="var(--gem-sys-color--on-primary-container, #ffffff)"
+                bg={accentColor}
+                color="white"
                 fontSize="11px"
                 fontWeight="bold"
               >

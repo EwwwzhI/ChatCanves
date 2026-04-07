@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Box, Flex } from '@chakra-ui/react'
+import { Box, VStack } from '@chakra-ui/react'
 import {
-  applyTheme,
+  applyCustomTheme,
+  getCustomThemeSettings,
   getAppearanceState,
   DEFAULT_THEME_BACKGROUND_SETTINGS,
   getThemeBackgroundSettings,
@@ -58,7 +59,12 @@ function getBackgroundErrorMessage(error: unknown): string {
 }
 
 export function ThemeSettingsView() {
-  const { palette, setPalette } = useColorPalette()
+  const {
+    setSelectedThemeKey,
+    customTheme,
+    setCustomTheme,
+    accentColor,
+  } = useColorPalette()
   const [appearanceState, setAppearanceState] = useState<AppearanceState>(() => getAppearanceState())
   const [isPanelOpen, setIsPanelOpen] = useState(true)
   const [backgroundState, setBackgroundState] = useState<ThemeBackgroundResolvedState | null>(null)
@@ -71,6 +77,8 @@ export function ThemeSettingsView() {
   const loadBackgroundState = useCallback(async () => {
     setIsBackgroundLoading(true)
     try {
+      const nextCustomTheme = await getCustomThemeSettings()
+      setCustomTheme(nextCustomTheme)
       const settings = await getThemeBackgroundSettings()
       const previewUrl = await resolveThemeBackgroundPreviewUrl(settings)
       setBackgroundState(toResolvedState(settings, previewUrl))
@@ -111,10 +119,17 @@ export function ThemeSettingsView() {
     return unsubscribe
   }, [appearanceState.mode, isPanelOpen])
 
-  const handleSelect = async (key: string) => {
-    await applyTheme(key)
-    setPalette(key || 'blue')
-  }
+  const handleApplyCustomTheme = useCallback(
+    async (partialSettings: { color?: string; surfaceOpacity?: number }) => {
+      const nextSettings = await applyCustomTheme({
+        ...customTheme,
+        ...partialSettings,
+      })
+      setCustomTheme(nextSettings)
+      setSelectedThemeKey('custom')
+    },
+    [customTheme, setCustomTheme, setSelectedThemeKey],
+  )
 
   const handleAppearanceChange = useCallback((mode: AppearanceMode) => {
     const state = setAppearanceMode(mode)
@@ -208,7 +223,6 @@ export function ThemeSettingsView() {
     }
   }, [])
 
-  const activeKey = palette || 'blue'
   const previewState = useMemo(
     () => backgroundState ?? {
       settings: DEFAULT_THEME_BACKGROUND_SETTINGS,
@@ -226,54 +240,14 @@ export function ThemeSettingsView() {
       overflow="hidden"
       data-view="theme-settings"
     >
-      <Box flex="1" minH="0">
-        <Flex
-          gap={{ base: 0, lg: 8 }}
-          height="100%"
-          align="stretch"
-        >
-          <Box
-            flex="1"
-            minWidth="0"
-            minH="0"
-            overflowY="auto"
-            pr={{ base: 0, lg: 2 }}
-          >
-            <AppearanceSelector
-              value={appearanceState.mode}
-              onChange={handleAppearanceChange}
-              isLoading={false}
-            />
-            <ColorPresets
-              activeKey={activeKey}
-              onSelect={handleSelect}
-              isLoading={false}
-            />
-            <CustomBackground
-              state={backgroundState}
-              isLoading={isBackgroundLoading}
-              onToggleBackground={handleToggleBackground}
-              onBlurChange={handleBlurChange}
-              onToggleSidebarScrim={handleToggleSidebarScrim}
-              onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
-              onToggleMessageGlass={handleToggleMessageGlass}
-              onWelcomeGreetingReadabilityModeChange={
-                handleWelcomeGreetingReadabilityModeChange
-              }
-              onUploadFile={handleUploadFile}
-              onRemoveImage={handleRemoveImage}
-            />
-          </Box>
-
-          <Box
-            width="340px"
-            flexShrink={0}
-            display={{ base: 'none', lg: 'block' }}
-            position="sticky"
-            top={0}
-            alignSelf="flex-start"
-            pt={1}
-          >
+      <Box
+        flex="1"
+        minH="0"
+        overflowY="auto"
+        pr={1}
+      >
+        <VStack align="stretch" gap={5}>
+          <Box>
             <LivePreview
               backgroundEnabled={previewState.settings.backgroundImageEnabled}
               backgroundUrl={previewState.resolvedBackgroundUrl}
@@ -281,11 +255,38 @@ export function ThemeSettingsView() {
               sidebarScrimEnabled={previewState.settings.sidebarScrimEnabled}
               sidebarScrimIntensity={previewState.settings.sidebarScrimIntensity}
               messageGlassEnabled={previewState.settings.messageGlassEnabled}
+              accentColor={accentColor}
+              surfaceOpacity={customTheme.surfaceOpacity}
             />
           </Box>
-        </Flex>
-      </Box>
 
+          <AppearanceSelector
+            value={appearanceState.mode}
+            onChange={handleAppearanceChange}
+            isLoading={false}
+          />
+          <ColorPresets
+            customColor={customTheme.color}
+            surfaceOpacity={customTheme.surfaceOpacity}
+            onApplyCustomTheme={handleApplyCustomTheme}
+            isLoading={false}
+          />
+          <CustomBackground
+            state={backgroundState}
+            isLoading={isBackgroundLoading}
+            onToggleBackground={handleToggleBackground}
+            onBlurChange={handleBlurChange}
+            onToggleSidebarScrim={handleToggleSidebarScrim}
+            onSidebarScrimIntensityChange={handleSidebarScrimIntensityChange}
+            onToggleMessageGlass={handleToggleMessageGlass}
+            onWelcomeGreetingReadabilityModeChange={
+              handleWelcomeGreetingReadabilityModeChange
+            }
+            onUploadFile={handleUploadFile}
+            onRemoveImage={handleRemoveImage}
+          />
+        </VStack>
+      </Box>
     </Box>
   )
 }

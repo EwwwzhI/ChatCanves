@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ThemeAssetRow, ThemeBackgroundResolvedState, ThemeBackgroundSettings } from '../types'
-import { eventBus } from '@/utils/eventbus'
 
 const { mockEstimate } = vi.hoisted(() => ({
   mockEstimate: vi.fn(),
@@ -61,10 +60,18 @@ function createAsset(overrides: Partial<ThemeAssetRow> = {}): ThemeAssetRow {
 }
 
 describe('welcome-greeting service', () => {
+  const mountGreetingTitle = () => {
+    document.body.innerHTML = `
+      <greeting>
+        <div class="greeting-title">Hello</div>
+      </greeting>
+      <div class="top-section-container visible-primary-message"></div>
+    `
+  }
+
   beforeEach(() => {
     document.body.innerHTML = ''
     document.body.className = ''
-    history.replaceState({}, '', '/app')
     mockEstimate.mockReset()
     mockEstimate.mockResolvedValue({
       resolved: 'force-light',
@@ -111,6 +118,7 @@ describe('welcome-greeting service', () => {
   })
 
   it('does not apply force-light style in dark mode', async () => {
+    mountGreetingTitle()
     document.body.classList.add('dark-theme')
 
     const settings = createSettings({
@@ -126,6 +134,7 @@ describe('welcome-greeting service', () => {
   })
 
   it('applies force-light style in light mode on welcome page', async () => {
+    mountGreetingTitle()
     document.body.classList.add('light-theme')
 
     const settings = createSettings({
@@ -141,6 +150,7 @@ describe('welcome-greeting service', () => {
   })
 
   it('clears force-light style when URL changes away from homepage', async () => {
+    mountGreetingTitle()
     document.body.classList.add('light-theme')
     const settings = createSettings({
       welcomeGreetingReadabilityMode: 'force-light',
@@ -152,11 +162,8 @@ describe('welcome-greeting service', () => {
       document.documentElement.getAttribute('data-gpk-welcome-greeting-force-light'),
     ).toBe('true')
 
-    history.replaceState({}, '', '/app/abc123')
-    await eventBus.emit('urlchange', {
-      url: 'http://localhost:3000/app/abc123',
-      timestamp: Date.now(),
-    })
+    document.body.innerHTML = '<main>conversation page</main>'
+    await Promise.resolve()
     await Promise.resolve()
 
     expect(

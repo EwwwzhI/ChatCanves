@@ -1,43 +1,7 @@
-/**
- * IndexedDB Database Setup using Dexie
- * Unified extension database, supports multiple business tables
- */
-
 import Dexie, { type Table } from 'dexie'
-
-import type { QuickFollowIconKey } from '@/domain/quick-follow/iconKeys'
 import type { ThemeAssetRow } from '@/entrypoints/content/gemini-theme/background/types'
 
-export interface QuickFollowPromptRow {
-  id: string
-  name?: string
-  template: string
-  iconKey: QuickFollowIconKey
-  enabled: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-export interface QuickFollowSettingsRow {
-  id: 'default'
-  orderedIds: string[]
-  enabled: boolean
-}
-
-export interface ChainPromptRow {
-  id: string
-  name: string
-  description?: string
-  createdAt: string
-  updatedAt: string
-  variables: { key: string; defaultValue?: string }[]
-  steps: { id: string; name?: string; prompt: string }[]
-}
-
 export class GeminiExtensionDB extends Dexie {
-  chain_prompts!: Table<ChainPromptRow, string>
-  quick_follow_prompts!: Table<QuickFollowPromptRow, string>
-  quick_follow_settings!: Table<QuickFollowSettingsRow, string>
   theme_assets!: Table<ThemeAssetRow, string>
 
   constructor() {
@@ -64,6 +28,12 @@ export class GeminiExtensionDB extends Dexie {
       .upgrade(() => {
         // no-op: existing installations do not require data migration
       })
+    this.version(4).stores({
+      chain_prompts: null,
+      quick_follow_prompts: null,
+      quick_follow_settings: null,
+      theme_assets: 'id, feature, updatedAt',
+    })
   }
 }
 

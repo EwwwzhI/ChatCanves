@@ -3,9 +3,8 @@ import type {
   ThemeBackgroundResolvedState,
   ThemeBackgroundSettings,
 } from '../types'
-import { eventBus } from '@/utils/eventbus'
 import { estimateWelcomeGreetingReadability } from './estimator'
-import { getWelcomeGreetingRect } from './rect'
+import { getWelcomeGreetingRect, hasGreetingTitleElement } from './rect'
 import {
   __clearWelcomeGreetingStyleControllerForTests,
   applyWelcomeGreetingForceLightStyle,
@@ -22,7 +21,7 @@ interface ResolveWelcomeGreetingOptions {
 let activeState: ThemeBackgroundResolvedState | null = null
 let bodyThemeObserver: MutationObserver | null = null
 let rootThemeObserver: MutationObserver | null = null
-let stopUrlChangeListener: (() => void) | null = null
+let pageObserver: MutationObserver | null = null
 let isReconcileQueued = false
 
 function shouldForceLightByMode(
@@ -42,15 +41,8 @@ function isDarkThemeActive(): boolean {
   )
 }
 
-function isHomepageByUrl(): boolean {
-  if (typeof window === 'undefined') return false
-  try {
-    const url = new URL(window.location.href)
-    const normalizedPath = url.pathname.replace(/\/+$/, '')
-    return normalizedPath === '/app'
-  } catch {
-    return false
-  }
+function isHomepageGreetingVisible(): boolean {
+  return hasGreetingTitleElement()
 }
 
 function reconcileWelcomeGreetingStyle(): void {
@@ -61,7 +53,7 @@ function reconcileWelcomeGreetingStyle(): void {
 
   if (
     !activeState.isBackgroundRenderable
-    || !isHomepageByUrl()
+    || !isHomepageGreetingVisible()
     || isDarkThemeActive()
   ) {
     clearWelcomeGreetingStyle()
@@ -94,9 +86,13 @@ function ensureReactivityHooks(): void {
     return
   }
 
-  if (!stopUrlChangeListener) {
-    stopUrlChangeListener = eventBus.on('urlchange', () => {
+  if (!pageObserver && document.body) {
+    pageObserver = new MutationObserver(() => {
       queueReconcile()
+    })
+    pageObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
     })
   }
 
@@ -202,8 +198,8 @@ export function clearWelcomeGreetingReadabilityStyle(): void {
 export function __resetWelcomeGreetingReadabilityServiceForTests(): void {
   activeState = null
   isReconcileQueued = false
-  stopUrlChangeListener?.()
-  stopUrlChangeListener = null
+  pageObserver?.disconnect()
+  pageObserver = null
   bodyThemeObserver?.disconnect()
   rootThemeObserver?.disconnect()
   bodyThemeObserver = null

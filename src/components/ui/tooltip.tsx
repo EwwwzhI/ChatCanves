@@ -22,15 +22,24 @@ export const Tooltip = React.forwardRef<HTMLDivElement, TooltipProps>(
       portalRef,
       ...rest
     } = props
+    const mergedContentProps: ChakraTooltip.ContentProps = {
+      zIndex: 10000000010,
+      maxW: "260px",
+      ...contentProps,
+    }
+    const positioning = rest.positioning ?? {
+      placement: "top",
+      offset: { mainAxis: 8, crossAxis: 0 },
+    }
 
     if (disabled) return children
 
     return (
-      <ChakraTooltip.Root {...rest}>
+      <ChakraTooltip.Root {...rest} positioning={positioning}>
         <ChakraTooltip.Trigger asChild>{children}</ChakraTooltip.Trigger>
         <Portal disabled={!portalled} container={portalRef}>
-          <ChakraTooltip.Positioner>
-            <ChakraTooltip.Content ref={ref} {...contentProps}>
+          <ChakraTooltip.Positioner zIndex={10000000010}>
+            <ChakraTooltip.Content ref={ref} {...mergedContentProps}>
               {showArrow && (
                 <ChakraTooltip.Arrow>
                   <ChakraTooltip.ArrowTip />

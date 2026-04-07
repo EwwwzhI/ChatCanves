@@ -47,7 +47,7 @@ export function AppearanceSelector({
         >
           <SegmentGroup.Indicator
             borderRadius="lg"
-            bg="colorPalette.solid"
+            bg="var(--gpk-panel-accent)"
             shadow="sm"
           />
 
@@ -62,11 +62,11 @@ export function AppearanceSelector({
               fontWeight="medium"
               transition="color 0.15s ease"
               _checked={{
-                color: 'colorPalette.contrast',
+                color: 'var(--gpk-panel-accent-contrast)',
               }}
               _hover={{
                 color: 'gemOnSurface',
-                _checked: { color: 'colorPalette.contrast' },
+                _checked: { color: 'var(--gpk-panel-accent-contrast)' },
               }}
               cursor={isLoading ? 'not-allowed' : 'pointer'}
               opacity={isLoading ? 0.5 : 1}

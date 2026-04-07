@@ -3,14 +3,37 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { Global } from "@emotion/react"
 import { system } from "@/components/ui/system"
-import { getThemeKey, themeKeyStorage } from "@/entrypoints/content/gemini-theme/themeStorage"
+import {
+  CUSTOM_THEME_KEY,
+  DEFAULT_CUSTOM_THEME_SETTINGS,
+  getReadableTextColor,
+  getThemeKey,
+  hexToRgbaString,
+  themePresets,
+  type CustomThemeSettings,
+} from "@/entrypoints/content/gemini-theme"
+import {
+  getCustomThemeSettings,
+  themeCustomSettingsStorage,
+  themeKeyStorage,
+} from "@/entrypoints/content/gemini-theme/themeStorage"
 
 const ColorPaletteContext = createContext<{
   palette: string
-  setPalette: (p: string) => void
+  selectedThemeKey: string
+  accentColor: string
+  accentContrastColor: string
+  customTheme: CustomThemeSettings
+  setSelectedThemeKey: (key: string) => void
+  setCustomTheme: (settings: CustomThemeSettings) => void
 }>({
   palette: "blue",
-  setPalette: () => { },
+  selectedThemeKey: "blue",
+  accentColor: "#4285f4",
+  accentContrastColor: "#ffffff",
+  customTheme: DEFAULT_CUSTOM_THEME_SETTINGS,
+  setSelectedThemeKey: () => { },
+  setCustomTheme: () => { },
 })
 
 export function useColorPalette() {
@@ -18,25 +41,65 @@ export function useColorPalette() {
 }
 
 export function ColorPaletteProvider({ children }: { children: React.ReactNode }) {
-  const [palette, setPalette] = useState("blue")
+  const [selectedThemeKey, setSelectedThemeKey] = useState("blue")
+  const [customTheme, setCustomTheme] = useState<CustomThemeSettings>(
+    DEFAULT_CUSTOM_THEME_SETTINGS,
+  )
 
-  // Initialize from storage on mount, then watch for cross-tab changes
   useEffect(() => {
-    getThemeKey().then((key) => {
-      if (key) setPalette(key)
+    void getThemeKey().then((key) => {
+      setSelectedThemeKey(key || 'blue')
+    })
+    void getCustomThemeSettings().then((settings) => {
+      setCustomTheme(settings)
     })
 
-    const unwatch = themeKeyStorage.watch((newKey) => {
-      setPalette(newKey || 'blue')
+    const unwatchThemeKey = themeKeyStorage.watch((newKey) => {
+      setSelectedThemeKey(newKey || 'blue')
     })
-    return unwatch
+    const unwatchCustomTheme = themeCustomSettingsStorage.watch((newSettings) => {
+      if (!newSettings) return
+      setCustomTheme(newSettings)
+    })
+
+    return () => {
+      unwatchThemeKey()
+      unwatchCustomTheme()
+    }
   }, [])
 
+  const palette = selectedThemeKey === CUSTOM_THEME_KEY
+    ? 'blue'
+    : selectedThemeKey
+
+  const accentColor = selectedThemeKey === CUSTOM_THEME_KEY
+    ? customTheme.color
+    : themePresets.find((preset) => preset.key === selectedThemeKey)?.primary ?? '#4285f4'
+  const accentContrastColor = getReadableTextColor(accentColor)
+
   return (
-    <ColorPaletteContext.Provider value={{ palette, setPalette }}>
+    <ColorPaletteContext.Provider
+      value={{
+        palette,
+        selectedThemeKey,
+        accentColor,
+        accentContrastColor,
+        customTheme,
+        setSelectedThemeKey,
+        setCustomTheme,
+      }}
+    >
       <Global
         styles={{
-          ":host": system.css({ colorPalette: palette }) as any,
+          ":host": {
+            ...(system.css({ colorPalette: palette }) as any),
+            "--gpk-panel-accent": accentColor,
+            "--gpk-panel-accent-contrast": accentContrastColor,
+            "--gpk-panel-accent-soft": hexToRgbaString(accentColor, 0.14),
+            "--gpk-panel-accent-border": hexToRgbaString(accentColor, 0.32),
+            "--gpk-panel-accent-strong": hexToRgbaString(accentColor, 0.52),
+            "--gpk-panel-surface-alpha": `${customTheme.surfaceOpacity}%`,
+          },
         }}
       />
       {children}

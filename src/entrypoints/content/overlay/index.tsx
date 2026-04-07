@@ -4,9 +4,7 @@ import { createRoot } from "react-dom/client"
 import { Toaster } from "@/components/ui/toaster"
 import { SettingPanel } from "@/components/setting-panel"
 import { useSyncColorMode } from "@/hooks/useSyncColorMode"
-import QuickFollowUp from "./quick-follow-up"
 import ExtensionUpdate from "./extension-update"
-import WhatsNew from "./whats-new"
 
 function App() {
   useSyncColorMode()
@@ -15,9 +13,7 @@ function App() {
     <>
       <SettingPanel />
       <Toaster />
-      <QuickFollowUp />
       <ExtensionUpdate />
-      <WhatsNew />
     </>
   )
 }

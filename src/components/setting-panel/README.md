@@ -1,104 +1,36 @@
 # Setting Panel Component
 
-Setting panel functionality implemented based on design drafts and requirements documents, providing a complete two-level navigation structure.
+Theme-only settings UI for Gemini.
 
-## Features
+## Current Behavior
 
-- **Sidebar Navigation**: Main navigation fixed on the left, containing all functional modules.
-- **Two-level Page Structure**: Supports navigation between list views (L1) and detail views (L2).
-- **State Management**: Global state management using Zustand.
-- **Responsive Design**: Design system based on Chakra UI.
+- Renders a floating launcher on the right side of the page.
+- Clicking the launcher opens a slide-out panel from the right.
+- The panel contains a single theme settings view.
+- Theme state changes emit `settings:state-changed` for components that need to react to open/close state.
 
-## Component Structure
+## Included Features
 
-```
-setting-panel/
-├── index.tsx          # Main setting panel component
-├── Sidebar.tsx        # Sidebar navigation component
-├── ContentArea.tsx    # Content area component
-└── README.md
-```
+- Appearance mode: light, dark, system
+- Preset theme colors
+- Custom accent color
+- Interface opacity control
+- Custom background image and related visual options
 
 ## Usage
-
-### Basic Usage
 
 ```tsx
 import { SettingPanel } from './components/setting-panel'
 
-// The component automatically listens for the 'settings:open' event
 function App() {
   return <SettingPanel />
 }
 ```
 
-### Opening the Setting Panel
+The panel manages its own open/close state. No external open event is required.
 
-```tsx
-import { useEventEmitter } from './hooks/useEventBus'
+## Notes
 
-function SomeComponent() {
-  const { emit } = useEventEmitter()
-  
-  const openSettings = () => {
-    emit('settings:open', { open: true })
-  }
-  
-  return <button onClick={openSettings}>Open Settings</button>
-}
-```
-
-## State Management
-
-Use Zustand store to manage navigation state:
-
-```tsx
-import useSettingStore from './stores/settingStore'
-
-// Usage in React components
-const { activeSection, currentView, setActiveSection } = useSettingStore()
-
-// Usage in non-React environments
-import { getSettingState, setActiveSection } from './stores/settingStore'
-```
-
-## Navigation Structure
-
-### Level 1 Navigation (Sidebar)
-
-- **Prompt Group**
-  - Chain Prompt
-  - Quick Follow-up
-- **Tools Group**
-  - Chat outline
-  - Theme
-- **Others**
-  - Support
-  - Feedback
-
-### Level 2 Pages
-
-Each level 1 navigation item supports entering a level 2 detail page, which includes:
-- Back button (top left corner)
-- Page title
-- Placeholder content area
-
-## Extension Guide
-
-### Adding a new navigation item
-
-1. Add a new `NavigationSection` type in `src/stores/settingStore.ts`.
-2. Add a new item to the `navigationItems` array in `Sidebar.tsx`.
-3. Add configuration to `sectionConfigs` in `ContentArea.tsx`.
-
-### Customizing Content Pages
-
-Modify the `LevelOnePage` and `LevelTwoPage` components in `ContentArea.tsx` to replace placeholder content with actual functional components.
-
-## Tech Stack
-
-- **React**: UI Framework
-- **Chakra UI v3**: UI Component Library
-- **Zustand**: State Management
-- **React Icons**: Icon Library
-- **TypeScript**: Type Support
+- The component is intended to be mounted in the Gemini content overlay.
+- Visual styling depends on the theme palette variables provided by the overlay provider.
+- The panel no longer includes sidebar navigation, multi-page routing, popup integration, or prompt/tool modules.

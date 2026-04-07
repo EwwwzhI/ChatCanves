@@ -5,7 +5,6 @@ export function t(id: string, substitutions?: string | string[] | number) {
   // If context is invalid, return the key itself as fallback
   // The i18nCache should be used for post-invalidation scenarios
   if (!isExtensionContextValid()) {
-    console.warn('[i18n] Extension context invalid, returning key:', id)
     return id
   }
 
@@ -23,7 +22,9 @@ export function t(id: string, substitutions?: string | string[] | number) {
     return (globalThis as any).browser?.i18n?.getMessage?.(id, subs) || id
   } catch (error) {
     // If any error occurs (e.g., context invalidated during call), return key
-    console.warn('[i18n] Error getting translation:', error)
+    if (import.meta.env.DEV && isExtensionContextValid()) {
+      console.warn('[i18n] Error getting translation:', error)
+    }
     return id
   }
 }
