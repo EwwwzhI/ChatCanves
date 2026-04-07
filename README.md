@@ -1,5 +1,7 @@
 # ChatCanves
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com) that only keeps theme and background customization.
 
 ## What It Does
