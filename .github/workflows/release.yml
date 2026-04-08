@@ -24,19 +24,21 @@ jobs:
   release:
     name: Build And Publish Release
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -77,10 +79,20 @@ jobs:
           fi
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ inputs.version }}
-          name: ChatCanves v${{ inputs.version }}
-          body_path: RELEASE_NOTES.md
-          files: ${{ steps.assets.outputs.files }}
-          prerelease: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          tag="v${{ inputs.version }}"
+          title="ChatCanves v${{ inputs.version }}"
+          prerelease_flag=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            prerelease_flag="--prerelease"
+          fi
+
+          mapfile -t files <<< "${{ steps.assets.outputs.files }}"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes-file RELEASE_NOTES.md $prerelease_flag
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" --title "$title" --notes-file RELEASE_NOTES.md --target "$GITHUB_SHA" $prerelease_flag
+          fi
