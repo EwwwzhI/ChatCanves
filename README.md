@@ -2,16 +2,31 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
-ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com) that only keeps theme and background customization.
+ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com) and [DeepSeek](https://chat.deepseek.com) that keeps only theme and background customization.
 
-## What It Does
+Current version: `0.2.0`
 
-- Adds a floating launcher on the right side of the Gemini page
-- Opens a slide-out theme panel without relying on a browser action popup
+## Features
+
+- Supports both Gemini and DeepSeek web chat
+- Opens from a floating launcher on the right side of the page
+- Uses a slide-out theme panel instead of a browser action popup
 - Supports system, light, and dark appearance modes
-- Supports custom interface accent, chat surface color, and chat text color controls
-- Supports custom wallpaper, blur, sidebar readability scrim, and message glass effect
-- Persists theme settings locally in the browser
+- Supports custom interface accent, chat surface color, and chat text color
+- Supports custom wallpaper upload, blur, sidebar readability scrim, and message glass
+- Stores theme settings locally and keeps Gemini and DeepSeek settings separate
+
+## Install From Release
+
+If you only want to use the extension, use the packaged release:
+
+1. Open the repository `Releases` page
+2. Download the zip asset for the version you want
+3. Extract it locally
+4. Open `chrome://extensions`
+5. Enable `Developer mode`
+6. Click `Load unpacked`
+7. Select the extracted extension directory
 
 ## Local Development
 
@@ -33,23 +48,15 @@ pnpm build
 
 1. Run `pnpm build`
 2. Open `chrome://extensions`
-3. Enable Developer mode
+3. Enable `Developer mode`
 4. Click `Load unpacked`
 5. Select `.output/chrome-mv3`
 
-## Release Usage
+## Notes
 
-If you only want to use the extension, you do not need to run `pnpm install`.
-
-Use the GitHub Release instead:
-
-1. Open the repository `Releases` page
-2. Download the attached zip asset for the version you want
-3. Extract the zip locally
-4. Open `chrome://extensions`
-5. Enable Developer mode
-6. Click `Load unpacked`
-7. Select the extracted extension directory
+- ChatCanves is currently built for `gemini.google.com` and `chat.deepseek.com`
+- Theme settings are stored per site, so changes on Gemini do not overwrite DeepSeek
+- Wallpaper assets are stored locally in the browser
 
 ## Repository
 
