@@ -19,15 +19,22 @@ import {
   hexToRgb,
   isValidHexColor,
   normalizeHexColor,
+  normalizeSurfaceOpacity,
   type CustomThemeSettings,
 } from '@/entrypoints/content/gemini-theme'
+import type { CustomThemeApplyOptions } from '@/entrypoints/content/site-adapters/types'
 import { tt } from '@/utils/i18n'
 
 interface ColorPresetsProps {
   accentColor: string
   surfaceColor: string
+  surfaceOpacity: number
   textColor: string
-  onApplyCustomTheme: (settings: Partial<CustomThemeSettings>) => Promise<void>
+  showSurfaceOpacityControl?: boolean
+  onApplyCustomTheme: (
+    settings: Partial<CustomThemeSettings>,
+    options?: CustomThemeApplyOptions,
+  ) => Promise<void>
   isLoading?: boolean
 }
 
@@ -146,18 +153,22 @@ const FIELD_META: Record<
 export function ColorPresets({
   accentColor,
   surfaceColor,
+  surfaceOpacity,
   textColor,
+  showSurfaceOpacityControl,
   onApplyCustomTheme,
   isLoading,
 }: ColorPresetsProps) {
   const panelRef = useRef<HTMLDivElement | null>(null)
   const nativeColorInputRef = useRef<HTMLInputElement | null>(null)
+  const isAdjustingSurfaceOpacityRef = useRef(false)
   const [activeField, setActiveField] = useState<ColorField>('accentColor')
   const [draftColors, setDraftColors] = useState<Record<ColorField, string>>({
     accentColor,
     surfaceColor,
     textColor,
   })
+  const [draftSurfaceOpacity, setDraftSurfaceOpacity] = useState(surfaceOpacity)
   const [pickerColor, setPickerColor] = useState<HsvColor>(() => hexToHsv(accentColor))
   const [isDraggingPanel, setIsDraggingPanel] = useState(false)
 
@@ -174,6 +185,11 @@ export function ColorPresets({
       textColor,
     })
   }, [accentColor, surfaceColor, textColor])
+
+  useEffect(() => {
+    if (isAdjustingSurfaceOpacityRef.current) return
+    setDraftSurfaceOpacity(surfaceOpacity)
+  }, [surfaceOpacity])
 
   useEffect(() => {
     setPickerColor(hexToHsv(draftColors[activeField]))
@@ -450,8 +466,64 @@ export function ColorPresets({
                   </Slider.Control>
                 </Slider.Root>
               </Box>
+
             </VStack>
           </HStack>
+
+          {showSurfaceOpacityControl && (
+            <Box
+              p={4}
+              borderRadius="xl"
+              bg="rgba(255,255,255,0.44)"
+              border="1px solid"
+              borderColor="var(--gpk-panel-surface-border)"
+            >
+              <HStack justify="space-between" align="center" mb={2}>
+                <Text fontSize="sm" fontWeight="semibold" color="gemOnSurface">
+                  {tt('settingPanel.theme.surfaceOpacity', 'Chat surface opacity')}
+                </Text>
+                <Text fontSize="sm" color="gemOnSurfaceVariant">
+                  {draftSurfaceOpacity}%
+                </Text>
+              </HStack>
+              <Slider.Root
+                min={35}
+                max={100}
+                step={1}
+                value={[draftSurfaceOpacity]}
+                  onValueChange={(details: { value: number[] }) => {
+                    isAdjustingSurfaceOpacityRef.current = true
+                    const nextOpacity = normalizeSurfaceOpacity(
+                      Number(details.value[0] ?? surfaceOpacity),
+                    )
+                    setDraftSurfaceOpacity(nextOpacity)
+                    void onApplyCustomTheme(
+                      { surfaceOpacity: nextOpacity },
+                      { persist: false },
+                    )
+                  }}
+                onValueChangeEnd={(details: { value: number[] }) => {
+                  const nextOpacity = normalizeSurfaceOpacity(
+                    Number(details.value[0] ?? surfaceOpacity),
+                  )
+                  isAdjustingSurfaceOpacityRef.current = false
+                  setDraftSurfaceOpacity(nextOpacity)
+                  void onApplyCustomTheme({ surfaceOpacity: nextOpacity })
+                }}
+                disabled={isLoading}
+              >
+                <Slider.Control>
+                  <Slider.Track bg="linear-gradient(90deg, rgba(15,23,42,0.12) 0%, var(--gpk-panel-surface-color) 100%)">
+                    <Slider.Range bg="transparent" />
+                  </Slider.Track>
+                  <Slider.Thumb index={0} boxShadow="0 0 0 4px var(--gpk-panel-surface-soft)">
+                    <Slider.HiddenInput />
+                  </Slider.Thumb>
+                </Slider.Control>
+              </Slider.Root>
+            </Box>
+          )}
+
         </VStack>
       </Box>
     </Box>

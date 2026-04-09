@@ -7,6 +7,10 @@ import type {
   ThemeBackgroundSettings,
 } from '@/entrypoints/content/gemini-theme/background/types'
 
+export interface CustomThemeApplyOptions {
+  persist?: boolean
+}
+
 export interface ThemeSiteAdapter {
   siteKey: SiteKey
   displayName: string
@@ -17,6 +21,7 @@ export interface ThemeSiteAdapter {
   initTheme: () => Promise<void>
   applyCustomTheme: (
     settings: Partial<CustomThemeSettings>,
+    options?: CustomThemeApplyOptions,
   ) => Promise<CustomThemeSettings>
   clearTheme: () => Promise<void>
   getAppearanceState: () => AppearanceState

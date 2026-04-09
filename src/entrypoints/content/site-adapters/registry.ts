@@ -1,3 +1,4 @@
+import { chatGptThemeSiteAdapter } from './chatgpt'
 import { deepSeekThemeSiteAdapter } from './deepseek'
 import { geminiThemeSiteAdapter } from './gemini'
 import type { ThemeSiteAdapter } from './types'
@@ -5,6 +6,7 @@ import type { ThemeSiteAdapter } from './types'
 const THEME_SITE_ADAPTERS: ThemeSiteAdapter[] = [
   geminiThemeSiteAdapter,
   deepSeekThemeSiteAdapter,
+  chatGptThemeSiteAdapter,
 ]
 
 export function resolveThemeSiteAdapter(

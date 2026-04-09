@@ -11,13 +11,56 @@ import {
   setCustomThemeSettings,
   setThemeKey,
 } from '@/entrypoints/content/gemini-theme/themeStorage'
+import type { CustomThemeApplyOptions } from '@/entrypoints/content/site-adapters/types'
 import { buildDeepSeekCustomThemeCss } from './customTheme'
 import { injectDeepSeekThemeOverride, removeDeepSeekThemeOverride } from './inject'
 import { initDeepSeekAppearance } from './appearance'
+import { initDeepSeekTableLayoutSync } from './tableLayout'
 
 const DEEPSEEK_SITE_KEY = 'deepseek' as const
 
 let watchersInitialized = false
+let queuedCustomThemeSettings = normalizeCustomThemeSettings({})
+let customThemePersistPromise: Promise<CustomThemeSettings> | null = null
+
+function isSameCustomThemeSettings(
+  left: CustomThemeSettings,
+  right: CustomThemeSettings,
+): boolean {
+  return (
+    left.accentColor === right.accentColor
+    && left.surfaceColor === right.surfaceColor
+    && left.surfaceOpacity === right.surfaceOpacity
+    && left.textColor === right.textColor
+  )
+}
+
+async function persistQueuedDeepSeekCustomTheme(): Promise<CustomThemeSettings> {
+  if (customThemePersistPromise) {
+    return await customThemePersistPromise
+  }
+
+  customThemePersistPromise = (async () => {
+    let persisted = queuedCustomThemeSettings
+
+    while (true) {
+      const target = queuedCustomThemeSettings
+      await setCustomThemeSettings(target, DEEPSEEK_SITE_KEY)
+      await setThemeKey(CUSTOM_THEME_KEY, DEEPSEEK_SITE_KEY)
+      persisted = target
+
+      if (isSameCustomThemeSettings(target, queuedCustomThemeSettings)) {
+        return persisted
+      }
+    }
+  })()
+
+  try {
+    return await customThemePersistPromise
+  } finally {
+    customThemePersistPromise = null
+  }
+}
 
 async function resolveThemeCss(key: string): Promise<string | null> {
   if (key !== CUSTOM_THEME_KEY) {
@@ -39,6 +82,7 @@ async function syncThemeCss(key: string): Promise<void> {
 
 export async function initDeepSeekTheme(): Promise<void> {
   await initDeepSeekAppearance()
+  initDeepSeekTableLayoutSync()
 
   try {
     await syncThemeCss(await getThemeKey(DEEPSEEK_SITE_KEY))
@@ -64,14 +108,16 @@ export async function initDeepSeekTheme(): Promise<void> {
 
 export async function applyDeepSeekCustomTheme(
   settings: Partial<CustomThemeSettings>,
+  options?: CustomThemeApplyOptions,
 ): Promise<CustomThemeSettings> {
-  const normalized = await setCustomThemeSettings(
-    normalizeCustomThemeSettings(settings),
-    DEEPSEEK_SITE_KEY,
-  )
+  const normalized = normalizeCustomThemeSettings(settings)
   injectDeepSeekThemeOverride(buildDeepSeekCustomThemeCss(normalized))
-  await setThemeKey(CUSTOM_THEME_KEY, DEEPSEEK_SITE_KEY)
-  return normalized
+  if (options?.persist === false) {
+    return normalized
+  }
+
+  queuedCustomThemeSettings = normalized
+  return await persistQueuedDeepSeekCustomTheme()
 }
 
 export async function clearDeepSeekTheme(): Promise<void> {

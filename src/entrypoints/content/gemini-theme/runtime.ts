@@ -14,10 +14,52 @@ import {
   setCustomThemeSettings,
   setThemeKey,
 } from './themeStorage'
+import type { CustomThemeApplyOptions } from '@/entrypoints/content/site-adapters/types'
 
 const GEMINI_SITE_KEY = 'gemini' as const
 
 let watchersInitialized = false
+let queuedCustomThemeSettings = normalizeCustomThemeSettings({})
+let customThemePersistPromise: Promise<CustomThemeSettings> | null = null
+
+function isSameCustomThemeSettings(
+  left: CustomThemeSettings,
+  right: CustomThemeSettings,
+): boolean {
+  return (
+    left.accentColor === right.accentColor
+    && left.surfaceColor === right.surfaceColor
+    && left.surfaceOpacity === right.surfaceOpacity
+    && left.textColor === right.textColor
+  )
+}
+
+async function persistQueuedGeminiCustomTheme(): Promise<CustomThemeSettings> {
+  if (customThemePersistPromise) {
+    return await customThemePersistPromise
+  }
+
+  customThemePersistPromise = (async () => {
+    let persisted = queuedCustomThemeSettings
+
+    while (true) {
+      const target = queuedCustomThemeSettings
+      await setCustomThemeSettings(target, GEMINI_SITE_KEY)
+      await setThemeKey(CUSTOM_THEME_KEY, GEMINI_SITE_KEY)
+      persisted = target
+
+      if (isSameCustomThemeSettings(target, queuedCustomThemeSettings)) {
+        return persisted
+      }
+    }
+  })()
+
+  try {
+    return await customThemePersistPromise
+  } finally {
+    customThemePersistPromise = null
+  }
+}
 
 async function resolveThemeCss(key: string): Promise<string | null> {
   if (key === CUSTOM_THEME_KEY) {
@@ -63,14 +105,16 @@ export async function initGeminiTheme(): Promise<void> {
 
 export async function applyGeminiCustomTheme(
   settings: Partial<CustomThemeSettings>,
+  options?: CustomThemeApplyOptions,
 ): Promise<CustomThemeSettings> {
-  const normalized = await setCustomThemeSettings(
-    normalizeCustomThemeSettings(settings),
-    GEMINI_SITE_KEY,
-  )
+  const normalized = normalizeCustomThemeSettings(settings)
   injectGeminiThemeOverride(buildCustomThemeCss(normalized))
-  await setThemeKey(CUSTOM_THEME_KEY, GEMINI_SITE_KEY)
-  return normalized
+  if (options?.persist === false) {
+    return normalized
+  }
+
+  queuedCustomThemeSettings = normalized
+  return await persistQueuedGeminiCustomTheme()
 }
 
 export async function clearGeminiTheme(): Promise<void> {

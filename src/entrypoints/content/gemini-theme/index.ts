@@ -1,6 +1,7 @@
 import type { AppearanceMode, GeminiTheme } from './appearance/types'
 import type { ThemeBackgroundPatch, ThemeBackgroundSettings } from './background/types'
 import type { CustomThemeSettings } from './customTheme'
+import type { CustomThemeApplyOptions } from '@/entrypoints/content/site-adapters/types'
 import { getActiveSiteContext, getActiveSiteKey } from '@/entrypoints/content/site-adapters/context'
 import { getThemeSiteAdapterByKey } from '@/entrypoints/content/site-adapters/registry'
 
@@ -14,8 +15,9 @@ export async function initTheme(): Promise<void> {
 
 export async function applyCustomTheme(
   settings: Partial<CustomThemeSettings>,
+  options?: CustomThemeApplyOptions,
 ) {
-  return await getActiveThemeSiteAdapter().applyCustomTheme(settings)
+  return await getActiveThemeSiteAdapter().applyCustomTheme(settings, options)
 }
 
 export async function clearTheme(): Promise<void> {
@@ -86,3 +88,4 @@ export {
 } from './themeStorage'
 export { themePresets, getPresetByKey } from './runtime'
 export type { ThemePreset } from './preset/presets'
+export type { CustomThemeApplyOptions } from '@/entrypoints/content/site-adapters/types'

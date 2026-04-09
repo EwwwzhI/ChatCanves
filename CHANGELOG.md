@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - 2026-04-09
+
+- Added site-aware theming support across Gemini, DeepSeek, and ChatGPT entrypoints
+- Reworked Gemini chat surface opacity so it targets only the chat area and composer
+- Refined DeepSeek wallpaper, sidebar scrim, think block, and accent styling behavior
+- Added automated coverage for the new site adapters and theme CSS generation
+
 ## 0.2.0 - 2026-04-08
 
 - Expanded ChatCanves from Gemini-only support to Gemini and DeepSeek

@@ -21,6 +21,20 @@ export const DEFAULT_CUSTOM_THEME_SETTINGS: CustomThemeSettings = {
   surfaceOpacity: 88,
 }
 
+export interface GeminiChatSurfaceOpacityScale {
+  lightSurface: number
+  lightSurfaceStrong: number
+  darkSurface: number
+  darkSurfaceStrong: number
+}
+
+export interface GeminiChatSurfaceTokens {
+  lightSurface: string
+  lightSurfaceStrong: string
+  darkSurface: string
+  darkSurfaceStrong: string
+}
+
 interface RgbColor {
   r: number
   g: number
@@ -35,6 +49,10 @@ const MAX_SURFACE_OPACITY = 100
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
+}
+
+function interpolate(value: number, min: number, max: number): number {
+  return min + (max - min) * value
 }
 
 function expandHexColor(value: string): string {
@@ -64,8 +82,11 @@ export function isValidHexColor(value: string): boolean {
 }
 
 export function normalizeSurfaceOpacity(value: number): number {
-  void value
-  return DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity
+  if (!Number.isFinite(value)) {
+    return DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity
+  }
+
+  return clamp(Math.round(value), MIN_SURFACE_OPACITY, MAX_SURFACE_OPACITY)
 }
 
 export function getDefaultChatTextColor(): string {
@@ -99,7 +120,45 @@ export function normalizeCustomThemeSettings(
     accentColor,
     surfaceColor,
     textColor: normalizeHexColor(raw?.textColor ?? getDefaultChatTextColor()),
-    surfaceOpacity: DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity,
+    surfaceOpacity: normalizeSurfaceOpacity(Number(raw?.surfaceOpacity)),
+  }
+}
+
+export function getGeminiChatSurfaceOpacityScale(
+  surfaceOpacity: number,
+): GeminiChatSurfaceOpacityScale {
+  const normalizedOpacity = normalizeSurfaceOpacity(surfaceOpacity)
+  const opacityProgress = (
+    (normalizedOpacity - MIN_SURFACE_OPACITY)
+    / (MAX_SURFACE_OPACITY - MIN_SURFACE_OPACITY)
+  )
+
+  return {
+    lightSurface: interpolate(opacityProgress, 0.16, 0.78),
+    lightSurfaceStrong: interpolate(opacityProgress, 0.22, 0.9),
+    darkSurface: interpolate(opacityProgress, 0.28, 0.92),
+    darkSurfaceStrong: interpolate(opacityProgress, 0.34, 0.96),
+  }
+}
+
+export function buildGeminiChatSurfaceTokens(
+  surfaceColor: string,
+  surfaceOpacity: number,
+): GeminiChatSurfaceTokens {
+  const normalizedSurfaceColor = normalizeHexColor(surfaceColor)
+  const alphaScale = getGeminiChatSurfaceOpacityScale(surfaceOpacity)
+
+  return {
+    lightSurface: hexToRgbaString(normalizedSurfaceColor, alphaScale.lightSurface),
+    lightSurfaceStrong: hexToRgbaString(
+      normalizedSurfaceColor,
+      alphaScale.lightSurfaceStrong,
+    ),
+    darkSurface: hexToRgbaString(normalizedSurfaceColor, alphaScale.darkSurface),
+    darkSurfaceStrong: hexToRgbaString(
+      normalizedSurfaceColor,
+      alphaScale.darkSurfaceStrong,
+    ),
   }
 }
 
@@ -177,8 +236,6 @@ function buildChatSurfaceSelectorList(): string {
   return [
     'model-response response-container>div.response-container',
     'dual-model-response',
-    'extensions-window>div.extensions-window-container',
-    'saved-info-page>div.page-container>div.page-content',
     'input-container input-area-v2',
     'input-area-v2>div>auto-suggest>div',
     'div.query-content.edit-mode div.edit-container>mat-form-field>div.mat-mdc-text-field-wrapper',
@@ -206,19 +263,21 @@ export function buildCustomThemeCss(raw: Partial<CustomThemeSettings>): string {
   const settings = normalizeCustomThemeSettings(raw)
   const accentTones = buildToneScale(settings.accentColor)
   const surfaceTones = buildToneScale(settings.surfaceColor)
-  const opacity = normalizeSurfaceOpacity(settings.surfaceOpacity)
   const accentContrast = getReadableTextColor(settings.accentColor)
   const chatText = normalizeHexColor(settings.textColor)
   const chatTextMuted = hexToRgbaString(chatText, 0.76)
   const selectionColor = hexToRgbaString(settings.accentColor, 0.26)
-  const lightPanelOpacity = clamp(opacity + 6, 42, 100)
-  const lightPanelStrongOpacity = clamp(opacity + 14, 48, 100)
-  const lightSideNavOpacity = clamp(opacity - 2, 35, 96)
-  const lightBubbleOpacity = clamp(opacity + 10, 48, 100)
-  const darkPanelOpacity = clamp(opacity + 6, 72, 100)
-  const darkPanelStrongOpacity = clamp(opacity + 12, 76, 100)
-  const darkSideNavOpacity = clamp(opacity + 10, 76, 100)
-  const darkBubbleOpacity = clamp(opacity + 10, 76, 100)
+  const chatSurfaceTokens = buildGeminiChatSurfaceTokens(
+    settings.surfaceColor,
+    settings.surfaceOpacity,
+  )
+  const defaultSurfaceOpacity = DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity
+  const lightPanelOpacity = clamp(defaultSurfaceOpacity + 6, 42, 100)
+  const lightPanelStrongOpacity = clamp(defaultSurfaceOpacity + 14, 48, 100)
+  const lightSideNavOpacity = clamp(defaultSurfaceOpacity - 2, 35, 96)
+  const darkPanelOpacity = clamp(defaultSurfaceOpacity + 6, 72, 100)
+  const darkPanelStrongOpacity = clamp(defaultSurfaceOpacity + 12, 76, 100)
+  const darkSideNavOpacity = clamp(defaultSurfaceOpacity + 10, 76, 100)
   const surfaceSelectors = buildChatSurfaceSelectorList()
   const chatTextSelectors = buildChatTextSelectorList()
 
@@ -253,10 +312,10 @@ export function buildCustomThemeCss(raw: Partial<CustomThemeSettings>): string {
   --ccv-chat-text: ${chatText};
   --ccv-chat-text-muted: ${chatTextMuted};
   --ccv-chat-surface-border: ${hexToRgbaString(settings.surfaceColor, 0.28)};
-  --ccv-gemini-chat-surface-light: ${hexToRgbaString(settings.surfaceColor, 0.68)};
-  --ccv-gemini-chat-surface-light-strong: ${hexToRgbaString(settings.surfaceColor, 0.76)};
-  --ccv-gemini-chat-surface-dark: ${hexToRgbaString(settings.surfaceColor, 0.78)};
-  --ccv-gemini-chat-surface-dark-strong: ${hexToRgbaString(settings.surfaceColor, 0.86)};
+  --ccv-gemini-chat-surface-light: ${chatSurfaceTokens.lightSurface};
+  --ccv-gemini-chat-surface-light-strong: ${chatSurfaceTokens.lightSurfaceStrong};
+  --ccv-gemini-chat-surface-dark: ${chatSurfaceTokens.darkSurface};
+  --ccv-gemini-chat-surface-dark-strong: ${chatSurfaceTokens.darkSurfaceStrong};
   --ccv-gemini-chat-border-light: ${hexToRgbaString(settings.surfaceColor, 0.22)};
   --ccv-gemini-chat-border-dark: ${hexToRgbaString(settings.surfaceColor, 0.3)};
 }

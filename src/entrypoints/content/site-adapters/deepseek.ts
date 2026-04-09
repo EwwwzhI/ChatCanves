@@ -24,8 +24,8 @@ export const deepSeekThemeSiteAdapter: ThemeSiteAdapter = {
   capabilities: {
     backgroundImage: true,
     blur: true,
-    messageGlass: false,
-    sidebarScrim: false,
+    messageGlass: true,
+    sidebarScrim: true,
     welcomeGreetingReadability: false,
   },
   matches: (hostname) => hostname === 'chat.deepseek.com',
@@ -36,8 +36,8 @@ export const deepSeekThemeSiteAdapter: ThemeSiteAdapter = {
     capabilities: {
       backgroundImage: true,
       blur: true,
-      messageGlass: false,
-      sidebarScrim: false,
+      messageGlass: true,
+      sidebarScrim: true,
       welcomeGreetingReadability: false,
     },
   }),

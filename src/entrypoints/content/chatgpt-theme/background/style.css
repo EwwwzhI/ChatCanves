@@ -1,0 +1,84 @@
+:root[data-ccv-site="chatgpt"] #gpk-theme-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  background-image: var(--gpk-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(var(--gpk-bg-blur));
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] :is(
+  __CCV_CHATGPT_WALLPAPER_ROOT__,
+  __CCV_CHATGPT_ASSISTANT_OUTER__,
+  __CCV_CHATGPT_ASSISTANT_SURFACE__,
+  __CCV_CHATGPT_CHAT_LIST_SURFACE__,
+  __CCV_CHATGPT_SIDEBAR_ROOT__
+) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] body {
+  background: transparent !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] :is(
+  __CCV_CHATGPT_MAIN_COLUMN__,
+  __CCV_CHATGPT_BOTTOM_BLOCK__
+) {
+  background: var(--ccv-chatgpt-surface, rgba(255, 255, 255, 0.62)) !important;
+  border: 1px solid var(--ccv-chatgpt-border, rgba(255, 255, 255, 0.24)) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px) !important;
+  border-radius: 28px !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] :is(
+  __CCV_CHATGPT_NEW_CHAT__,
+  __CCV_CHATGPT_SEARCH_CHAT__,
+  __CCV_CHATGPT_HISTORY_ITEM__,
+  __CCV_CHATGPT_ASSISTANT_SURFACE__,
+  __CCV_CHATGPT_USER_BUBBLE__,
+  __CCV_CHATGPT_COMPOSER_SHELL__
+) {
+  background: var(--ccv-chatgpt-surface-strong, rgba(255, 255, 255, 0.78)) !important;
+  border: 1px solid var(--ccv-chatgpt-border, rgba(255, 255, 255, 0.24)) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] __CCV_CHATGPT_CHAT_LIST_SURFACE__ {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] :is(
+  __CCV_CHATGPT_USER_BUBBLE__,
+  __CCV_CHATGPT_COMPOSER_SHELL__
+) {
+  border-radius: 28px !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] __CCV_CHATGPT_COMPOSER_SHELL__ :is(
+  div,
+  section,
+  footer
+) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:root[data-ccv-site="chatgpt"][data-gpk-bg-enabled="true"] __CCV_CHATGPT_COMPOSER_INPUT__ {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}

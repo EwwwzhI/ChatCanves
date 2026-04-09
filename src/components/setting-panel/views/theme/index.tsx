@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Box, VStack } from '@chakra-ui/react'
 import {
   applyCustomTheme,
+  type CustomThemeSettings,
+  type CustomThemeApplyOptions,
   getCustomThemeSettings,
   getCurrentSiteContext,
   getAppearanceState,
@@ -127,16 +129,21 @@ export function ThemeSettingsView() {
 
   const handleApplyCustomTheme = useCallback(
     async (
-      partialSettings: {
-        accentColor?: string
-        surfaceColor?: string
-        textColor?: string
-      },
+      partialSettings: Partial<
+        Pick<
+          CustomThemeSettings,
+          | 'accentColor'
+          | 'surfaceColor'
+          | 'surfaceOpacity'
+          | 'textColor'
+        >
+      >,
+      options?: CustomThemeApplyOptions,
     ) => {
       const nextSettings = await applyCustomTheme({
         ...customTheme,
         ...partialSettings,
-      })
+      }, options)
       setCustomTheme(nextSettings)
       setSelectedThemeKey('custom')
     },
@@ -275,6 +282,7 @@ export function ThemeSettingsView() {
               }
               accentColor={accentColor}
               surfaceColor={customTheme.surfaceColor}
+              surfaceOpacity={customTheme.surfaceOpacity}
               textColor={customTheme.textColor}
             />
           </Box>
@@ -287,7 +295,12 @@ export function ThemeSettingsView() {
           <ColorPresets
             accentColor={customTheme.accentColor}
             surfaceColor={customTheme.surfaceColor}
+            surfaceOpacity={customTheme.surfaceOpacity}
             textColor={customTheme.textColor}
+            showSurfaceOpacityControl={
+              siteContext.siteKey === 'gemini'
+              || siteContext.siteKey === 'deepseek'
+            }
             onApplyCustomTheme={handleApplyCustomTheme}
             isLoading={false}
           />

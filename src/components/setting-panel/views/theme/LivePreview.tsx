@@ -1,6 +1,10 @@
 import { Box, Heading, HStack, VStack } from '@chakra-ui/react'
 import { useColorMode } from '@/components/ui/color-mode'
-import { hexToRgbaString } from '@/entrypoints/content/gemini-theme'
+import {
+  buildGeminiChatSurfaceTokens,
+  DEFAULT_CUSTOM_THEME_SETTINGS,
+  hexToRgbaString,
+} from '@/entrypoints/content/gemini-theme'
 import { t } from '@/utils/i18n'
 
 interface LivePreviewProps {
@@ -12,10 +16,9 @@ interface LivePreviewProps {
   messageGlassEnabled: boolean
   accentColor: string
   surfaceColor: string
+  surfaceOpacity: number
   textColor: string
 }
-
-const FIXED_SURFACE_TINT = 0.88
 
 function PreviewAssistantIcon() {
   return (
@@ -46,6 +49,7 @@ export function LivePreview({
   messageGlassEnabled,
   accentColor,
   surfaceColor,
+  surfaceOpacity,
   textColor,
 }: LivePreviewProps) {
   const { colorMode } = useColorMode()
@@ -54,16 +58,23 @@ export function LivePreview({
   const sidebarScrimAlpha = (Math.min(100, Math.max(0, sidebarScrimIntensity)) / 100)
     .toFixed(2)
   const previewTitle = t('settingPanel.theme.livePreview')
+  const chromeSurfaceTokens = buildGeminiChatSurfaceTokens(
+    surfaceColor,
+    DEFAULT_CUSTOM_THEME_SETTINGS.surfaceOpacity,
+  )
+  const chatSurfaceTokens = buildGeminiChatSurfaceTokens(surfaceColor, surfaceOpacity)
   const surfaceBg = isDark
-    ? hexToRgbaString(surfaceColor, Math.max(0.72, FIXED_SURFACE_TINT * 0.88))
-    : hexToRgbaString(surfaceColor, Math.max(0.58, FIXED_SURFACE_TINT * 0.74))
+    ? chromeSurfaceTokens.darkSurfaceStrong
+    : chromeSurfaceTokens.lightSurfaceStrong
   const surfaceBorder = hexToRgbaString(surfaceColor, isDark ? 0.34 : 0.28)
   const bubbleBg = isDark
-    ? hexToRgbaString(surfaceColor, Math.max(0.78, FIXED_SURFACE_TINT * 0.92))
-    : hexToRgbaString(surfaceColor, Math.max(0.64, FIXED_SURFACE_TINT * 0.82))
+    ? chatSurfaceTokens.darkSurface
+    : chatSurfaceTokens.lightSurface
   const userBubbleBg = isDark
-    ? hexToRgbaString(surfaceColor, Math.max(0.84, FIXED_SURFACE_TINT * 0.96))
-    : hexToRgbaString(surfaceColor, Math.max(0.72, FIXED_SURFACE_TINT * 0.88))
+    ? chatSurfaceTokens.darkSurfaceStrong
+    : chatSurfaceTokens.lightSurfaceStrong
+  const composerBg = userBubbleBg
+  const previewGlassEnabled = canRenderBackground && messageGlassEnabled
 
   return (
     <Box>
@@ -183,7 +194,7 @@ export function LivePreview({
               bg={surfaceBg}
               border="1px solid"
               borderColor={surfaceBorder}
-              backdropFilter={messageGlassEnabled || canRenderBackground ? 'blur(18px)' : undefined}
+              backdropFilter={previewGlassEnabled ? 'blur(18px)' : undefined}
             >
               <Box
                 h="8px"
@@ -197,95 +208,112 @@ export function LivePreview({
               </HStack>
             </HStack>
 
-            <Box alignSelf="flex-end" maxW="205px">
-              <Box
-                px={3}
-                py={2}
-                borderRadius="xl"
-                borderBottomRightRadius="sm"
-                bg={userBubbleBg}
-                backdropFilter={messageGlassEnabled || canRenderBackground ? 'blur(18px)' : undefined}
-                border={`1px solid ${surfaceBorder}`}
-                color={textColor}
-                fontSize="xs"
-                lineHeight="1.4"
-              >
-                Accent color handles actions. Surface color handles the card.
-              </Box>
-            </Box>
-
-            <HStack
-              alignSelf="flex-start"
-              alignItems="flex-start"
-              maxW="250px"
-              gap={1.5}
-              pt={0.5}
+            <VStack
+              flex="1"
+              align="stretch"
+              gap={3}
             >
-              <PreviewAssistantIcon />
               <Box
-                px={3}
-                py={2}
-                borderRadius="xl"
-                bg={bubbleBg}
-                backdropFilter={messageGlassEnabled || canRenderBackground ? 'blur(20px)' : undefined}
-                border={`1px solid ${surfaceBorder}`}
-                boxShadow={`0 10px 30px ${hexToRgbaString(accentColor, isDark ? 0.18 : 0.12)}`}
-                color={textColor}
-                fontSize="xs"
-                lineHeight="1.45"
-              >
-                Text color is now independent, so the content stays readable on wallpaper.
-              </Box>
-            </HStack>
-
-            <Box flex="1" />
-
-            <VStack align="stretch" gap={2}>
-              <HStack
-                gap={2}
-                p={2}
-                borderRadius="full"
-                bg={surfaceBg}
-                border="1px solid"
-                borderColor={surfaceBorder}
-                backdropFilter={messageGlassEnabled || canRenderBackground ? 'blur(18px)' : undefined}
-              >
-                <Box
-                  flex="1"
-                  h="12px"
-                  borderRadius="full"
-                  bg={hexToRgbaString(textColor, 0.22)}
-                />
-                <Box
-                  as="span"
-                  width="28px"
-                  height="28px"
-                  borderRadius="full"
-                  display="inline-flex"
-                  alignItems="center"
-                  justifyContent="center"
-                  bg={accentColor}
-                  color="white"
-                  fontSize="11px"
-                  fontWeight="bold"
-                >
-                  &gt;
-                </Box>
-              </HStack>
-              <Box
+                width="100%"
+                maxW="100%"
                 alignSelf="center"
-                px={3}
-                py={1}
-                borderRadius="full"
-                bg={surfaceBg}
-                border="1px solid"
-                borderColor={surfaceBorder}
-                backdropFilter={messageGlassEnabled || canRenderBackground ? 'blur(18px)' : undefined}
-                color={hexToRgbaString(textColor, 0.72)}
-                fontSize="10px"
               >
-                Content is generated by AI. Double-check important details.
+                <HStack
+                  alignItems="flex-start"
+                  maxW="250px"
+                  gap={1.5}
+                  pt={0.5}
+                >
+                  <PreviewAssistantIcon />
+                  <Box
+                    px={3}
+                    py={2}
+                    borderRadius="xl"
+                    bg={bubbleBg}
+                    backdropFilter={previewGlassEnabled ? 'blur(20px)' : undefined}
+                    border={`1px solid ${surfaceBorder}`}
+                    boxShadow={`0 10px 30px ${hexToRgbaString(accentColor, isDark ? 0.18 : 0.12)}`}
+                    color={textColor}
+                    fontSize="xs"
+                    lineHeight="1.45"
+                  >
+                    Text color is now independent, so the content stays readable on wallpaper.
+                  </Box>
+                </HStack>
               </Box>
+
+              <Box alignSelf="flex-end" maxW="205px">
+                <Box
+                  px={3}
+                  py={2}
+                  borderRadius="xl"
+                  borderBottomRightRadius="sm"
+                  bg={userBubbleBg}
+                  backdropFilter={previewGlassEnabled ? 'blur(18px)' : undefined}
+                  border={`1px solid ${surfaceBorder}`}
+                  color={textColor}
+                  fontSize="xs"
+                  lineHeight="1.4"
+                >
+                  Accent color handles actions. Surface color handles the card.
+                </Box>
+              </Box>
+
+              <Box flex="1" />
+
+              <VStack
+                align="stretch"
+                gap={2}
+                width="100%"
+                maxW="100%"
+                alignSelf="center"
+              >
+                <HStack
+                  gap={2}
+                  p={2}
+                  borderRadius="full"
+                  bg={composerBg}
+                  border="1px solid"
+                  borderColor={surfaceBorder}
+                  backdropFilter={previewGlassEnabled ? 'blur(18px)' : undefined}
+                >
+                  <Box
+                    flex="1"
+                    h="12px"
+                    borderRadius="full"
+                    bg={hexToRgbaString(textColor, 0.22)}
+                  />
+                  <Box
+                    as="span"
+                    width="28px"
+                    height="28px"
+                    borderRadius="full"
+                    display="inline-flex"
+                    alignItems="center"
+                    justifyContent="center"
+                    bg={accentColor}
+                    color="white"
+                    fontSize="11px"
+                    fontWeight="bold"
+                  >
+                    &gt;
+                  </Box>
+                </HStack>
+                <Box
+                  alignSelf="center"
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                  bg={surfaceBg}
+                  border="1px solid"
+                  borderColor={surfaceBorder}
+                  backdropFilter={previewGlassEnabled ? 'blur(18px)' : undefined}
+                  color={hexToRgbaString(textColor, 0.72)}
+                  fontSize="10px"
+                >
+                  Content is generated by AI. Double-check important details.
+                </Box>
+              </VStack>
             </VStack>
           </VStack>
         </HStack>

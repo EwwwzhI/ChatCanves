@@ -2,19 +2,19 @@
 
 [English](./README.md) | [简体中文](./README.zh-CN.md)
 
-ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com) and [DeepSeek](https://chat.deepseek.com) that keeps only theme and background customization.
+ChatCanves is a focused browser extension for [Gemini](https://gemini.google.com), [DeepSeek](https://chat.deepseek.com), and [ChatGPT](https://chatgpt.com) that keeps only theme and background customization.
 
-Current version: `0.2.0`
+Current version: `0.2.1`
 
 ## Features
 
-- Supports both Gemini and DeepSeek web chat
+- Supports Gemini, DeepSeek, and ChatGPT web chat
 - Opens from a floating launcher on the right side of the page
 - Uses a slide-out theme panel instead of a browser action popup
 - Supports system, light, and dark appearance modes
 - Supports custom interface accent, chat surface color, and chat text color
 - Supports custom wallpaper upload, blur, sidebar readability scrim, and message glass
-- Stores theme settings locally and keeps Gemini and DeepSeek settings separate
+- Stores theme settings locally and keeps each supported site isolated
 
 ## Install From Release
 
@@ -54,8 +54,8 @@ pnpm build
 
 ## Notes
 
-- ChatCanves is currently built for `gemini.google.com` and `chat.deepseek.com`
-- Theme settings are stored per site, so changes on Gemini do not overwrite DeepSeek
+- ChatCanves is currently built for `gemini.google.com`, `chat.deepseek.com`, and `chatgpt.com`
+- Theme settings are stored per site, so changes on one site do not overwrite another
 - Wallpaper assets are stored locally in the browser
 
 ## Repository

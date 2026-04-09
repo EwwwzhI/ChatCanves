@@ -4,7 +4,7 @@
 
 ChatCanves 是一个专注于 [Gemini](https://gemini.google.com) 和 [DeepSeek](https://chat.deepseek.com) 网页端主题与背景美化的浏览器扩展，只保留界面视觉定制相关能力。
 
-当前版本：`0.2.0`
+当前版本：`0.2.1`
 
 ## 功能特性
 

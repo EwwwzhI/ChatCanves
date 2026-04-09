@@ -1,14 +1,15 @@
 import type { ThemeBackgroundResolvedState } from '@/entrypoints/content/gemini-theme/background/types'
 import backgroundStyleCss from './style.css?raw'
+import {
+  compileChatGptBackgroundCssTemplate,
+} from '../selectors'
 
-const STYLE_ID = 'chatcanves-deepseek-theme-background-override'
+const STYLE_ID = 'chatcanves-chatgpt-theme-background-override'
 const BACKGROUND_LAYER_ID = 'gpk-theme-bg-layer'
 const ROOT_BG_ENABLED_ATTR = 'data-gpk-bg-enabled'
-const ROOT_MSG_GLASS_ATTR = 'data-gpk-msg-glass'
-const ROOT_SIDEBAR_SCRIM_ENABLED_ATTR = 'data-gpk-sidebar-scrim-enabled'
 const ROOT_BG_IMAGE_VAR = '--gpk-bg-image'
 const ROOT_BG_BLUR_VAR = '--gpk-bg-blur'
-const ROOT_SIDEBAR_SCRIM_ALPHA_VAR = '--gpk-sidebar-scrim-alpha'
+const COMPILED_BACKGROUND_STYLE_CSS = compileChatGptBackgroundCssTemplate(backgroundStyleCss)
 
 function ensureStyleElement(): HTMLStyleElement | null {
   if (typeof document === 'undefined' || !document.head) return null
@@ -17,7 +18,7 @@ function ensureStyleElement(): HTMLStyleElement | null {
   if (!el) {
     el = document.createElement('style')
     el.id = STYLE_ID
-    el.textContent = backgroundStyleCss
+    el.textContent = COMPILED_BACKGROUND_STYLE_CSS
     document.head.appendChild(el)
   }
   return el
@@ -37,12 +38,22 @@ function ensureBackgroundLayerElement(): HTMLDivElement | null {
     layer = document.createElement('div')
     layer.id = BACKGROUND_LAYER_ID
     layer.setAttribute('aria-hidden', 'true')
+  }
+
+  if (layer.parentElement !== document.body) {
     document.body.prepend(layer)
   }
   return layer
 }
 
-export function applyDeepSeekThemeBackgroundStyle(
+export function syncChatGptThemeBackgroundHost(): void {
+  const layer = document.getElementById(BACKGROUND_LAYER_ID) as HTMLDivElement | null
+  if (!layer || typeof document === 'undefined' || !document.body) return
+  if (layer.parentElement === document.body) return
+  document.body.prepend(layer)
+}
+
+export function applyChatGptThemeBackgroundStyle(
   state: ThemeBackgroundResolvedState,
 ): void {
   const styleEl = ensureStyleElement()
@@ -53,20 +64,8 @@ export function applyDeepSeekThemeBackgroundStyle(
     ROOT_BG_ENABLED_ATTR,
     state.isBackgroundRenderable ? 'true' : 'false',
   )
-  root.setAttribute(
-    ROOT_MSG_GLASS_ATTR,
-    state.settings.messageGlassEnabled ? 'true' : 'false',
-  )
-  root.setAttribute(
-    ROOT_SIDEBAR_SCRIM_ENABLED_ATTR,
-    state.settings.sidebarScrimEnabled ? 'true' : 'false',
-  )
   root.style.setProperty(ROOT_BG_IMAGE_VAR, toCssImageValue(state.resolvedBackgroundUrl))
   root.style.setProperty(ROOT_BG_BLUR_VAR, `${state.settings.backgroundBlurPx}px`)
-  root.style.setProperty(
-    ROOT_SIDEBAR_SCRIM_ALPHA_VAR,
-    (state.settings.sidebarScrimIntensity / 100).toFixed(2),
-  )
 
   const backgroundLayer = ensureBackgroundLayerElement()
   if (!backgroundLayer) return
@@ -75,16 +74,13 @@ export function applyDeepSeekThemeBackgroundStyle(
   backgroundLayer.style.backgroundImage = toCssImageValue(state.resolvedBackgroundUrl)
 }
 
-export function clearDeepSeekThemeBackgroundStyle(): void {
+export function clearChatGptThemeBackgroundStyle(): void {
   if (typeof document === 'undefined' || !document.documentElement) return
 
   const root = document.documentElement
   root.removeAttribute(ROOT_BG_ENABLED_ATTR)
-  root.removeAttribute(ROOT_MSG_GLASS_ATTR)
-  root.removeAttribute(ROOT_SIDEBAR_SCRIM_ENABLED_ATTR)
   root.style.removeProperty(ROOT_BG_IMAGE_VAR)
   root.style.removeProperty(ROOT_BG_BLUR_VAR)
-  root.style.removeProperty(ROOT_SIDEBAR_SCRIM_ALPHA_VAR)
 
   document.getElementById(STYLE_ID)?.remove()
   document.getElementById(BACKGROUND_LAYER_ID)?.remove()
