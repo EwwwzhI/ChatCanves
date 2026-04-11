@@ -5,7 +5,7 @@ import { resolveThemeSiteAdapter } from './site-adapters/registry'
 import { initTheme, initThemeBackground } from './gemini-theme'
 
 export default defineContentScript({
-  matches: ['*://gemini.google.com/*', '*://chat.deepseek.com/*', '*://chatgpt.com/*'],
+  matches: ['*://gemini.google.com/*', '*://chat.deepseek.com/*'],
   runAt: 'document_idle',
   async main(ctx) {
     const adapter = resolveThemeSiteAdapter(window.location.hostname)

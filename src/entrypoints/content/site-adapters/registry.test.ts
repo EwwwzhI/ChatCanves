@@ -44,14 +44,7 @@ describe('theme site adapters', () => {
     expect(adapter?.capabilities.welcomeGreetingReadability).toBe(false)
   })
 
-  it('resolves the ChatGPT adapter by hostname', () => {
-    const adapter = resolveThemeSiteAdapter('chatgpt.com')
 
-    expect(adapter?.siteKey).toBe('chatgpt')
-    expect(adapter?.capabilities.backgroundImage).toBe(true)
-    expect(adapter?.capabilities.messageGlass).toBe(false)
-    expect(adapter?.capabilities.sidebarScrim).toBe(false)
-  })
 
   it('tracks the active site context for storage routing', () => {
     setActiveSiteContext({
@@ -71,49 +64,5 @@ describe('theme site adapters', () => {
     expect(getActiveSiteContext().displayName).toBe('DeepSeek')
   })
 
-  it('keeps ChatGPT theme and background settings isolated', async () => {
-    setActiveSiteContext({
-      siteKey: 'chatgpt',
-      displayName: 'ChatGPT',
-      hostname: 'chatgpt.com',
-      capabilities: {
-        backgroundImage: true,
-        blur: true,
-        messageGlass: true,
-        sidebarScrim: true,
-        welcomeGreetingReadability: false,
-      },
-    })
 
-    await setThemeKey('custom', 'chatgpt')
-    await updateThemeBackgroundSettings({
-      backgroundImageEnabled: true,
-      backgroundBlurPx: 9,
-    })
-
-    expect(await getThemeKey('chatgpt')).toBe('custom')
-    expect(await getThemeKey('deepseek')).toBe('')
-    expect(await getThemeBackgroundSettings()).toMatchObject({
-      backgroundImageEnabled: true,
-      backgroundBlurPx: 9,
-    })
-
-    setActiveSiteContext({
-      siteKey: 'deepseek',
-      displayName: 'DeepSeek',
-      hostname: 'chat.deepseek.com',
-      capabilities: {
-        backgroundImage: true,
-        blur: true,
-        messageGlass: true,
-        sidebarScrim: true,
-        welcomeGreetingReadability: false,
-      },
-    })
-
-    expect(await getThemeBackgroundSettings()).toMatchObject({
-      backgroundImageEnabled: false,
-      backgroundBlurPx: 5,
-    })
-  })
 })

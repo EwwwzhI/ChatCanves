@@ -23,9 +23,6 @@ const themeKeyStorageMap = {
   deepseek: storage.defineItem<string | null>('sync:themeKey:deepseek', {
     fallback: null,
   }),
-  chatgpt: storage.defineItem<string | null>('sync:themeKey:chatgpt', {
-    fallback: null,
-  }),
 } as const
 
 const themeCustomSettingsStorageMap = {
@@ -35,10 +32,6 @@ const themeCustomSettingsStorageMap = {
   ),
   deepseek: storage.defineItem<CustomThemeSettings | null>(
     'sync:themeCustomSettings:deepseek',
-    { fallback: null },
-  ),
-  chatgpt: storage.defineItem<CustomThemeSettings | null>(
-    'sync:themeCustomSettings:chatgpt',
     { fallback: null },
   ),
 } as const

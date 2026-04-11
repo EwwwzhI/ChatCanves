@@ -2,7 +2,7 @@
   "name": "chatcanves",
   "description": "A focused chat theme extension for Gemini and DeepSeek with custom interface accent, chat colors, and wallpaper controls.",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "EwwwzhI",
   "type": "module",
   "scripts": {

@@ -1,4 +1,4 @@
-export type SiteKey = 'gemini' | 'deepseek' | 'chatgpt'
+export type SiteKey = 'gemini' | 'deepseek'
 
 export interface SiteCapabilities {
   backgroundImage: boolean

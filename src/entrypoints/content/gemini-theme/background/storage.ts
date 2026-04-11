@@ -21,10 +21,6 @@ const themeBackgroundSettingsStorageMap = {
     'local:themeBackgroundSettings:deepseek',
     { fallback: null },
   ),
-  chatgpt: storage.defineItem<ThemeBackgroundSettings | null>(
-    'local:themeBackgroundSettings:chatgpt',
-    { fallback: null },
-  ),
 } as const
 
 function resolveSiteKey(siteKey?: SiteKey): SiteKey {

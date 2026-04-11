@@ -16,10 +16,6 @@ const DEFAULT_GEMINI_CONTEXT: SiteContext = {
 let activeSiteContext: SiteContext = DEFAULT_GEMINI_CONTEXT
 
 export function inferSiteKeyFromHostname(hostname: string): SiteKey {
-  if (hostname === 'chatgpt.com') {
-    return 'chatgpt'
-  }
-
   if (hostname === 'chat.deepseek.com') {
     return 'deepseek'
   }
